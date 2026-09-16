@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Street Accounting Reconciliation Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+
+/* =====================================================================
+   STREET ACCOUNTING RECONCILIATION CALCULATOR
+   ---------------------------------------------------------------------
+   This stylesheet is organised top-to-bottom in the order things
+   appear on the page. All brand colours live in :root so they can be
+   changed in one place if Street's palette ever changes.
+   ===================================================================== */
+
+:root{
+  --navy:#12152A;
+  --purple:#5B4BE7;
+  --purple-dark:#4A3BD1;
+  --purple-tint:#EFEBFF;
+  --surface:#F7F8FC;
+  --border:#E8EAF0;
+  --green:#0FA976;
+  --green-tint:#E7F8F1;
+  --amber:#D97706;
+  --amber-tint:#FDF1E1;
+  --red:#DC2F4B;
+  --red-tint:#FCE9ED;
+  --white:#FFFFFF;
+  --text:#12152A;
+  --text-muted:#6B7280;
+  --text-soft:#9197A8;
+  --radius-lg:18px;
+  --radius:14px;
+  --radius-sm:10px;
+  --shadow-card:0 1px 2px rgba(18,21,42,0.04), 0 8px 24px rgba(18,21,42,0.06);
+  --shadow-pop:0 4px 12px rgba(91,75,231,0.25);
+}
+
+*{ box-sizing:border-box; }
+
+html,body{
+  margin:0;
+  padding:0;
+  background:var(--surface);
+  color:var(--text);
+  font-family:'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+
+h1,h2,h3,h4{ margin:0; font-weight:700; letter-spacing:-0.01em; }
+p{ margin:0; }
+
+.wrap{
+  max-width:1180px;
+  margin:0 auto;
+  padding:0 24px 64px;
+}
+
+/* ---------------------------------------------------------------------
+   HEADER
+   --------------------------------------------------------------------- */
+
+.topbar{
+  background:linear-gradient(135deg, var(--navy) 0%, #1B1F3B 100%);
+  padding:36px 24px 40px;
+  margin-bottom:28px;
+}
+
+.topbar-inner{
+  max-width:1180px;
+  margin:0 auto;
+}
+
+.logo{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  color:var(--white);
+  font-weight:700;
+  font-size:15px;
+  letter-spacing:0.02em;
+  margin-bottom:18px;
+}
+.logo .dot{
+  width:7px; height:7px; border-radius:50%;
+  background:var(--purple);
+  display:inline-block;
+}
+
+.topbar h1{
+  color:var(--white);
+  font-size:30px;
+  margin-bottom:8px;
+}
+.topbar p.subtitle{
+  color:#B7BAD0;
+  font-size:15px;
+}
+
+/* ---------------------------------------------------------------------
+   GENERIC CARD / SECTION STYLES
+   --------------------------------------------------------------------- */
+
+.card{
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-card);
+  padding:24px;
+}
+
+.section-title{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:18px;
+}
+.section-title h2{ font-size:18px; }
+.section-title .step-no{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:24px; height:24px;
+  border-radius:50%;
+  background:var(--purple-tint);
+  color:var(--purple-dark);
+  font-size:12px;
+  font-weight:700;
+  margin-right:8px;
+}
+
+section{ margin-bottom:28px; }
+
+/* ---------------------------------------------------------------------
+   INSTRUCTIONS BANNER
+   --------------------------------------------------------------------- */
+
+.instructions{
+  background:var(--purple-tint);
+  border:1px solid #DCD5FF;
+  border-radius:var(--radius-lg);
+  padding:18px 22px;
+  display:flex;
+  gap:16px;
+  align-items:flex-start;
+}
+.instructions .icon{
+  width:34px; height:34px;
+  border-radius:10px;
+  background:var(--purple);
+  color:var(--white);
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700;
+  flex-shrink:0;
+}
+.instructions h3{ font-size:14px; margin-bottom:4px; color:var(--navy); }
+.instructions ol{
+  margin:0; padding-left:18px;
+  color:#3F3D63;
+  font-size:13.5px;
+  line-height:1.7;
+}
+
+/* ---------------------------------------------------------------------
+   TWO-COLUMN INPUT LAYOUT
+   --------------------------------------------------------------------- */
+
+.grid-2col{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+}
+
+@media (max-width: 880px){
+  .grid-2col{ grid-template-columns:1fr; }
+}
+
+.field-group{ margin-bottom:16px; }
+.field-group label{
+  display:block;
+  font-size:12.5px;
+  font-weight:600;
+  color:var(--text-muted);
+  margin-bottom:6px;
+  text-transform:uppercase;
+  letter-spacing:0.03em;
+}
+.field-hint{
+  font-size:11.5px;
+  color:var(--text-soft);
+  margin-top:4px;
+  font-weight:400;
+  text-transform:none;
+  letter-spacing:0;
+}
+
+.currency-input-wrap{
+  position:relative;
+}
+.currency-input-wrap .prefix{
+  position:absolute;
+  left:14px; top:50%;
+  transform:translateY(-50%);
+  color:var(--text-soft);
+  font-weight:600;
+  font-size:14px;
+}
+input[type="text"].currency-input,
+input[type="date"]{
+  width:100%;
+  padding:11px 14px 11px 30px;
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  font-family:inherit;
+  font-size:14.5px;
+  font-weight:600;
+  color:var(--navy);
+  background:var(--white);
+  transition:border-color .15s, box-shadow .15s;
+}
+input[type="date"]{ padding-left:14px; font-weight:500; }
+input.currency-input:focus,
+input[type="date"]:focus{
+  outline:none;
+  border-color:var(--purple);
+  box-shadow:0 0 0 3px rgba(91,75,231,0.14);
+}
+input.currency-input.is-override{
+  background:#FBFAFF;
+  border-color:#D7CFFF;
+}
+
+/* ---------------------------------------------------------------------
+   CSV UPLOAD / DROPZONE
+   --------------------------------------------------------------------- */
+
+.dropzone{
+  border:1.5px dashed var(--border);
+  border-radius:var(--radius);
+  background:var(--surface);
+  padding:28px 18px;
+  text-align:center;
+  cursor:pointer;
+  transition:border-color .15s, background .15s;
+}
+.dropzone:hover, .dropzone.dragover{
+  border-color:var(--purple);
+  background:var(--purple-tint);
+}
+.dropzone .upload-icon{
+  width:42px; height:42px;
+  margin:0 auto 10px;
+  border-radius:50%;
+  background:var(--purple-tint);
+  color:var(--purple);
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px;
+}
+.dropzone p.main{ font-size:14px; font-weight:600; color:var(--navy); margin-bottom:4px; }
+.dropzone p.sub{ font-size:12.5px; color:var(--text-soft); }
+.dropzone input[type="file"]{ display:none; }
+
+.file-chip{
+  display:none;
+  align-items:center;
+  gap:10px;
+  margin-top:14px;
+  padding:10px 14px;
+  background:var(--green-tint);
+  border:1px solid #BCE9D7;
+  border-radius:var(--radius-sm);
+  font-size:13px;
+  color:#0A7C57;
+  font-weight:600;
+}
+.file-chip.show{ display:flex; }
+.file-chip button{
+  margin-left:auto;
+  border:none; background:none;
+  color:#0A7C57;
+  font-weight:700;
+  cursor:pointer;
+  font-size:13px;
+  text-decoration:underline;
+}
+
+.warning-banner{
+  display:none;
+  margin-top:14px;
+  padding:12px 14px;
+  background:var(--amber-tint);
+  border:1px solid #F3D8A8;
+  border-radius:var(--radius-sm);
+  color:#8A5A05;
+  font-size:13px;
+  line-height:1.5;
+}
+.warning-banner.show{ display:block; }
+
+/* ---------------------------------------------------------------------
+   BUTTONS
+   --------------------------------------------------------------------- */
+
+.btn{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:11px 18px;
+  border-radius:10px;
+  border:1px solid transparent;
+  font-family:inherit;
+  font-size:13.5px;
+  font-weight:700;
+  cursor:pointer;
+  transition:transform .08s, box-shadow .15s, background .15s;
+}
+.btn:active{ transform:translateY(1px); }
+.btn-primary{
+  background:var(--purple);
+  color:var(--white);
+  box-shadow:var(--shadow-pop);
+}
+.btn-primary:hover{ background:var(--purple-dark); }
+.btn-ghost{
+  background:var(--white);
+  color:var(--text-muted);
+  border-color:var(--border);
+}
+.btn-ghost:hover{ border-color:#C9CCDA; color:var(--navy); }
+
+.actions-row{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-top:-6px;
+}
+@media (max-width:600px){
+  .actions-row{ justify-content:stretch; }
+  .actions-row .btn{ flex:1; justify-content:center; }
+}
+
+/* ---------------------------------------------------------------------
+   KPI CARDS
+   --------------------------------------------------------------------- */
+
+.kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:16px;
+  margin-bottom:16px;
+}
+@media (max-width:880px){ .kpi-grid{ grid-template-columns:repeat(2,1fr); } }
+@media (max-width:560px){ .kpi-grid{ grid-template-columns:1fr; } }
+
+.kpi-card{
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:18px 20px;
+  box-shadow:var(--shadow-card);
+}
+.kpi-card .label{
+  font-size:12px;
+  font-weight:600;
+  color:var(--text-muted);
+  text-transform:uppercase;
+  letter-spacing:0.03em;
+  margin-bottom:8px;
+}
+.kpi-card .value{
+  font-size:24px;
+  font-weight:700;
+  color:var(--navy);
+  letter-spacing:-0.01em;
+}
+.kpi-card.highlight{ border-color:#D7CFFF; }
+.kpi-card .value.negative{ color:var(--red); }
+.kpi-card .value.positive{ color:var(--green); }
+
+.status-banner{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+  padding:16px 20px;
+  border-radius:var(--radius);
+  border:1px solid var(--border);
+  background:var(--white);
+  box-shadow:var(--shadow-card);
+}
+.status-banner .status-left{ display:flex; align-items:center; gap:12px; }
+.status-banner .status-final{ font-size:13.5px; color:var(--text-muted); }
+.status-banner .status-final b{ color:var(--navy); font-size:15px; }
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 14px;
+  border-radius:999px;
+  font-size:12.5px;
+  font-weight:700;
+  letter-spacing:0.01em;
+}
+.badge .dot{ width:7px; height:7px; border-radius:50%; }
+.badge.balanced{ background:var(--green-tint); color:#0A7C57; }
+.badge.balanced .dot{ background:var(--green); }
+.badge.minor{ background:var(--amber-tint); color:#8A5A05; }
+.badge.minor .dot{ background:var(--amber); }
+.badge.review{ background:var(--red-tint); color:#A11633; }
+.badge.review .dot{ background:var(--red); }
+
+/* ---------------------------------------------------------------------
+   TRANSACTION TABLE
+   --------------------------------------------------------------------- */
+
+.chips-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-bottom:16px;
+}
+.chip{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:8px 14px;
+  font-size:12.5px;
+  font-weight:600;
+  color:var(--text-muted);
+}
+.chip b{ color:var(--navy); font-weight:700; }
+
+.toggle-group{
+  display:inline-flex;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:3px;
+  margin-bottom:16px;
+}
+.toggle-group button{
+  border:none;
+  background:none;
+  padding:8px 14px;
+  font-family:inherit;
+  font-size:12.5px;
+  font-weight:600;
+  color:var(--text-muted);
+  border-radius:8px;
+  cursor:pointer;
+}
+.toggle-group button.active{
+  background:var(--white);
+  color:var(--navy);
+  box-shadow:0 1px 3px rgba(18,21,42,0.1);
+}
+
+.table-scroll{
+  overflow-x:auto;
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+  min-width:760px;
+}
+thead th{
+  text-align:left;
+  font-size:11.5px;
+  text-transform:uppercase;
+  letter-spacing:0.03em;
+  color:var(--text-muted);
+  background:var(--surface);
+  padding:12px 14px;
+  border-bottom:1px solid var(--border);
+  white-space:nowrap;
+}
+tbody td{
+  padding:11px 14px;
+  border-bottom:1px solid var(--border);
+  color:var(--navy);
+  white-space:nowrap;
+}
+tbody tr:last-child td{ border-bottom:none; }
+tbody tr:hover{ background:#FAFAFD; }
+td.num{ text-align:right; font-weight:600; }
+td.num.debit{ color:var(--red); }
+td.num.credit{ color:var(--green); }
+.recon-pill{
+  display:inline-block;
+  padding:3px 9px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:700;
+  background:var(--amber-tint);
+  color:#8A5A05;
+}
+
+.empty-state{
+  text-align:center;
+  padding:32px 16px;
+  color:var(--text-soft);
+  font-size:13.5px;
+}
+
+/* ---------------------------------------------------------------------
+   REASONS CHECKLIST
+   --------------------------------------------------------------------- */
+
+.reasons-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+@media (max-width:700px){ .reasons-grid{ grid-template-columns:1fr; } }
+
+.reason-card{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  padding:14px 16px;
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  font-size:13.5px;
+  color:var(--navy);
+  line-height:1.5;
+}
+.reason-card input[type="checkbox"]{
+  margin-top:2px;
+  width:17px; height:17px;
+  accent-color:var(--purple);
+  flex-shrink:0;
+  cursor:pointer;
+}
+.reason-card label{ cursor:pointer; }
+.reason-card.checked{
+  background:var(--purple-tint);
+  border-color:#DCD5FF;
+}
+.reason-card.checked label{ color:var(--text-muted); text-decoration:line-through; }
+
+footer.note{
+  text-align:center;
+  color:var(--text-soft);
+  font-size:12px;
+  margin-top:8px;
+}
+
+</style>
+</head>
+<body>
+
+<!-- =====================================================================
+     HEADER
+     ===================================================================== -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="logo"><span class="dot"></span>Street.</div>
+    <h1>Accounting Reconciliation Calculator</h1>
+    <p class="subtitle">Check statement, Street and unreconciled transaction balances</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ===================================================================
+       INSTRUCTIONS
+       =================================================================== -->
+  <section class="instructions">
+    <div class="icon">i</div>
+    <div>
+      <h3>How to use this tool</h3>
+      <ol>
+        <li>Enter the current statement balance, current Street balance and last import date.</li>
+        <li>Upload the <b>Street &gt; All Transactions</b> CSV export, or skip this and type the unreconciled totals in manually.</li>
+        <li>Review the KPI cards and status badge below, then use <b>Copy summary</b> to paste the result into Slack, HubSpot or an email.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       MANUAL INPUTS  +  CSV UPLOAD
+       =================================================================== -->
+  <section class="grid-2col">
+
+    <!-- MANUAL INPUTS CARD -->
+    <div class="card">
+      <div class="section-title">
+        <h2><span class="step-no">1</span>Manual inputs</h2>
+      </div>
+
+      <div class="field-group">
+        <label for="inCurrentStatement">Current statement balance</label>
+        <div class="currency-input-wrap">
+          <span class="prefix">£</span>
+          <input type="text" id="inCurrentStatement" class="currency-input" inputmode="decimal" placeholder="0.00">
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label for="inLastImport">Last import date</label>
+        <input type="date" id="inLastImport">
+      </div>
+
+      <div class="field-group">
+        <label for="inCurrentStreet">Current Street balance</label>
+        <div class="currency-input-wrap">
+          <span class="prefix">£</span>
+          <input type="text" id="inCurrentStreet" class="currency-input" inputmode="decimal" placeholder="0.00">
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label for="inOutgoing">Outgoing account transactions unreconciled in Street</label>
+        <div class="currency-input-wrap">
+          <span class="prefix">£</span>
+          <input type="text" id="inOutgoing" class="currency-input" inputmode="decimal" placeholder="0.00">
+        </div>
+        <p class="field-hint">Auto-filled from the CSV (sum of unreconciled Debits, shown negative). Edit freely if the CSV doesn't cover everything.</p>
+      </div>
+
+      <div class="field-group">
+        <label for="inIncoming">Incoming account transactions unreconciled in Street</label>
+        <div class="currency-input-wrap">
+          <span class="prefix">£</span>
+          <input type="text" id="inIncoming" class="currency-input" inputmode="decimal" placeholder="0.00">
+        </div>
+        <p class="field-hint">Auto-filled from the CSV (sum of unreconciled Credits). Edit freely if needed.</p>
+      </div>
+
+      <div class="field-group">
+        <label for="inImported">Imported transactions not yet reconciled</label>
+        <div class="currency-input-wrap">
+          <span class="prefix">£</span>
+          <input type="text" id="inImported" class="currency-input" inputmode="decimal" placeholder="0.00">
+        </div>
+        <p class="field-hint">Manual entry only. Added to the True Street balance.</p>
+      </div>
+
+      <div class="field-group" style="margin-bottom:0;">
+        <label for="inDiscrepancy">Network trial balance discrepancy</label>
+        <div class="currency-input-wrap">
+          <span class="prefix">£</span>
+          <input type="text" id="inDiscrepancy" class="currency-input" inputmode="decimal" placeholder="0.00">
+        </div>
+      </div>
+    </div>
+
+    <!-- CSV UPLOAD CARD -->
+    <div class="card">
+      <div class="section-title">
+        <h2><span class="step-no">2</span>Account transactions CSV</h2>
+      </div>
+
+      <div class="dropzone" id="dropzone">
+        <div class="upload-icon">&#8593;</div>
+        <p class="main">Drop CSV here, or click to browse</p>
+        <p class="sub">Export from Street &gt; All Transactions</p>
+        <input type="file" id="csvFile" accept=".csv,text/csv">
+      </div>
+
+      <div class="file-chip" id="fileChip">
+        <span id="fileChipName">file.csv</span>
+        <button id="removeFileBtn" type="button">Remove</button>
+      </div>
+
+      <div class="warning-banner" id="csvWarning"></div>
+
+      <p class="field-hint" style="margin-top:14px;">
+        Expected columns: Date, Relates To, Type, Reference, Description, Debit, Credit, Reconciled?
+      </p>
+    </div>
+
+  </section>
+
+  <!-- ===================================================================
+       ACTIONS
+       =================================================================== -->
+  <section class="actions-row">
+    <button class="btn btn-ghost" id="clearBtn" type="button">Clear calculator</button>
+    <button class="btn btn-primary" id="copyBtn" type="button">Copy summary</button>
+  </section>
+
+  <!-- ===================================================================
+       RESULTS / KPI CARDS
+       =================================================================== -->
+  <section>
+    <div class="section-title">
+      <h2><span class="step-no">3</span>Results</h2>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="label">Current statement</div>
+        <div class="value" id="kpiCurrentStatement">£0.00</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Current Street</div>
+        <div class="value" id="kpiCurrentStreet">£0.00</div>
+      </div>
+      <div class="kpi-card highlight">
+        <div class="label">True statement balance</div>
+        <div class="value" id="kpiTrueStatement">£0.00</div>
+      </div>
+      <div class="kpi-card highlight">
+        <div class="label">True Street balance</div>
+        <div class="value" id="kpiTrueStreet">£0.00</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">True difference</div>
+        <div class="value" id="kpiTrueDifference">£0.00</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Final difference after trial balance</div>
+        <div class="value" id="kpiFinalDifference">£0.00</div>
+      </div>
+    </div>
+
+    <div class="status-banner">
+      <div class="status-left">
+        <span class="badge balanced" id="statusBadge"><span class="dot"></span><span id="statusLabel">Balanced</span></span>
+        <span class="status-final">Final difference: <b id="statusFinalValue">£0.00</b></span>
+      </div>
+      <span class="status-final" id="lastImportDisplay">Last import: not set</span>
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       TRANSACTION REVIEW TABLE
+       =================================================================== -->
+  <section>
+    <div class="section-title">
+      <h2><span class="step-no">4</span>Unreconciled transactions</h2>
+    </div>
+
+    <div class="chips-row">
+      <span class="chip">Count: <b id="chipCount">0</b></span>
+      <span class="chip">Total unreconciled debits: <b id="chipDebits">£0.00</b></span>
+      <span class="chip">Total unreconciled credits: <b id="chipCredits">£0.00</b></span>
+    </div>
+
+    <div class="toggle-group" id="filterToggle">
+      <button type="button" data-filter="all" class="active">All unreconciled</button>
+      <button type="button" data-filter="debits">Debits only</button>
+      <button type="button" data-filter="credits">Credits only</button>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Relates to</th>
+            <th>Type</th>
+            <th>Reference</th>
+            <th>Description</th>
+            <th style="text-align:right;">Debit</th>
+            <th style="text-align:right;">Credit</th>
+            <th>Reconciled?</th>
+          </tr>
+        </thead>
+        <tbody id="txnTableBody">
+          <tr><td colspan="8"><div class="empty-state">Upload a CSV above to see unreconciled transactions here.</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       POSSIBLE REASONS
+       =================================================================== -->
+  <section>
+    <div class="section-title">
+      <h2><span class="step-no">5</span>Possible reasons for discrepancies</h2>
+    </div>
+    <div class="reasons-grid" id="reasonsGrid">
+      <!-- populated by JS from REASONS array, so the list is easy to edit later -->
+    </div>
+  </section>
+
+  <footer class="note">Runs entirely in your browser — nothing is uploaded or stored anywhere.</footer>
+
+</main>
+
+<script>
+/* =====================================================================
+   STREET ACCOUNTING RECONCILIATION CALCULATOR — LOGIC
+   =====================================================================
+   Section index:
+     1. Config / constants        — easy place to tweak behaviour
+     2. Helpers                   — currency cleaning + formatting
+     3. CSV parsing                — turns raw CSV text into row objects
+     4. State                      — everything the page currently knows
+     5. Calculation engine         — the actual reconciliation formulas
+     6. Rendering                  — pushes state onto the DOM
+     7. Event wiring                — user interactions
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   1. CONFIG
+   --------------------------------------------------------------------- */
+
+// Columns we expect in the "Street > All Transactions" export.
+// Matching is case-insensitive and whitespace-trimmed, so small naming
+// differences in future exports won't break things.
+const EXPECTED_COLUMNS = ['Date', 'Relates To', 'Type', 'Reference', 'Description', 'Debit', 'Credit', 'Reconciled?'];
+
+// A row counts as "unreconciled" only when this column reads exactly "no".
+const UNRECONCILED_VALUE = 'no';
+
+// Status badge thresholds — tweak these if the business definition of
+// "minor" ever changes.
+const BALANCED_TOLERANCE = 0.005; // anything tighter than this is treated as exactly £0.00 (covers rounding)
+const MINOR_THRESHOLD = 1.00;     // under £1.00 (but not balanced) = "Minor difference"
+
+// The "Possible reasons" checklist. Stored as data so it's easy to
+// add/remove a reason without touching any HTML.
+const REASONS = [
+  'Bank lines not uploaded into Street',
+  'Bank lines deleted from Street',
+  'Opening balances added incorrectly',
+  'Insured deposits added incorrectly as "charge new deposit" instead of "add existing deposit"',
+  'Bank transaction imported but not linked to a ledger',
+  'Payment made in Street but not yet showing on the bank statement',
+  'Bank receipt showing on the statement but not yet reconciled in Street',
+  'Trial balance does not match the Street/accounting position',
+  'Duplicate import or missing import period',
+  'Manual adjustment made directly on a ledger'
+];
+
+/* ---------------------------------------------------------------------
+   2. HELPERS
+   --------------------------------------------------------------------- */
+
+const gbpFormatter = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' });
+
+// Formats a number as "£x.xx" or "-£x.xx". Intl already does this
+// correctly for negatives, so this is mostly a thin, readable wrapper.
+function formatGBP(num) {
+  if (num === null || num === undefined || isNaN(num)) num = 0;
+  return gbpFormatter.format(num);
+}
+
+// Cleans a raw currency string from user input or a CSV cell into a
+// plain JS number. Handles:
+//   "£1,234.50"   -> 1234.5
+//   "(£8.92)"     -> -8.92   (bracketed = negative, standard accounting notation)
+//   ""            -> 0       (blank cells treated as zero)
+//   "-12.00"      -> -12
+function cleanCurrency(raw) {
+  if (raw === null || raw === undefined) return 0;
+  let str = String(raw).trim();
+  if (str === '') return 0;
+
+  let negative = false;
+
+  // Bracketed values, e.g. (£8.92), are negative in accounting notation.
+  if (/^\(.*\)$/.test(str)) {
+    negative = true;
+    str = str.slice(1, -1);
+  }
+
+  // Strip everything except digits, a single leading minus and a decimal point.
+  str = str.replace(/[£,\s]/g, '');
+
+  if (str.startsWith('-')) {
+    negative = true;
+    str = str.slice(1);
+  }
+
+  const num = parseFloat(str);
+  if (isNaN(num)) return 0;
+  return negative ? -Math.abs(num) : Math.abs(num);
+}
+
+function normaliseHeader(h) {
+  return String(h || '').trim().toLowerCase();
+}
+
+/* ---------------------------------------------------------------------
+   3. CSV PARSING
+   --------------------------------------------------------------------- */
+
+// A small hand-rolled CSV parser (no external libraries). Handles
+// quoted fields, escaped quotes (""), and commas inside quoted fields.
+function parseCSVText(text) {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+  let i = 0;
+  const len = text.length;
+
+  while (i < len) {
+    const char = text[i];
+
+    if (inQuotes) {
+      if (char === '"') {
+        if (text[i + 1] === '"') { field += '"'; i += 2; continue; }
+        inQuotes = false; i++; continue;
+      }
+      field += char; i++; continue;
+    }
+
+    if (char === '"') { inQuotes = true; i++; continue; }
+    if (char === ',') { row.push(field); field = ''; i++; continue; }
+    if (char === '\r') { i++; continue; }
+    if (char === '\n') { row.push(field); rows.push(row); row = []; field = ''; i++; continue; }
+
+    field += char; i++;
+  }
+
+  // Flush the final field/row if the file doesn't end with a newline.
+  if (field.length > 0 || row.length > 0) { row.push(field); rows.push(row); }
+
+  // Drop fully blank trailing rows.
+  return rows.filter(r => r.some(cell => String(cell).trim() !== ''));
+}
+
+// Converts parsed CSV rows into an array of objects keyed by the
+// original header text, plus a normalised lookup for matching.
+function csvRowsToObjects(rows) {
+  if (rows.length === 0) return { objects: [], missingColumns: EXPECTED_COLUMNS.slice() };
+
+  const headerRow = rows[0];
+  const headerMap = headerRow.map(h => normaliseHeader(h));
+
+  const missingColumns = EXPECTED_COLUMNS.filter(
+    col => !headerMap.includes(normaliseHeader(col))
+  );
+
+  const objects = rows.slice(1).map(r => {
+    const obj = {};
+    headerRow.forEach((h, idx) => { obj[normaliseHeader(h)] = r[idx] !== undefined ? r[idx] : ''; });
+    return obj;
+  });
+
+  return { objects, missingColumns };
+}
+
+/* ---------------------------------------------------------------------
+   4. STATE
+   --------------------------------------------------------------------- */
+
+const state = {
+  allTransactionRows: [],     // every row from the CSV, normalised
+  unreconciledRows: [],       // just the rows where Reconciled? = No
+  csvLoaded: false,
+  tableFilter: 'all',         // 'all' | 'debits' | 'credits'
+  reasonsChecked: {}          // reason text -> bool, for the checklist
+};
+
+/* ---------------------------------------------------------------------
+   5. CALCULATION ENGINE
+   --------------------------------------------------------------------- */
+
+// Pulls a manual/override field's current value as a clean number.
+function fieldValue(id) {
+  return cleanCurrency(document.getElementById(id).value);
+}
+
+// Runs every time an input changes or a CSV is processed. Reads the
+// current state of all input fields and recomputes every downstream
+// figure, then re-renders the KPI cards and status badge.
+function recalculate() {
+  const currentStatement = fieldValue('inCurrentStatement');
+  const currentStreet = fieldValue('inCurrentStreet');
+  const unreconciledOutgoing = fieldValue('inOutgoing'); // expected to be <= 0
+  const unreconciledIncoming = fieldValue('inIncoming'); // expected to be >= 0
+  const importedNotReconciled = fieldValue('inImported'); // manual-only, added to True Street balance
+  const trialBalanceDiscrepancy = fieldValue('inDiscrepancy');
+
+  // --- Core formulas -----------------------------------------------
+  // True statement balance = current statement + unreconciled outgoing
+  // (outgoing is stored as a negative number, so this naturally subtracts it)
+  const trueStatementBalance = currentStatement + unreconciledOutgoing;
+
+  // True Street balance = current Street - unreconciled incoming + imported transactions not yet reconciled
+  const trueStreetBalance = currentStreet - unreconciledIncoming + importedNotReconciled;
+
+  // True difference = true statement balance - true Street balance
+  const trueDifference = trueStatementBalance - trueStreetBalance;
+
+  // Final difference after trial balance = true difference - network trial balance discrepancy
+  const finalDifference = trueDifference - trialBalanceDiscrepancy;
+
+  // --- Status badge ---------------------------------------------------
+  const absFinal = Math.abs(finalDifference);
+  let status; // 'balanced' | 'minor' | 'review'
+  if (absFinal < BALANCED_TOLERANCE) status = 'balanced';
+  else if (absFinal < MINOR_THRESHOLD) status = 'minor';
+  else status = 'review';
+
+  renderResults({
+    currentStatement, currentStreet, unreconciledOutgoing, unreconciledIncoming,
+    trueStatementBalance, trueStreetBalance, trueDifference,
+    trialBalanceDiscrepancy, finalDifference, status
+  });
+}
+
+/* ---------------------------------------------------------------------
+   6. RENDERING
+   --------------------------------------------------------------------- */
+
+function renderResults(r) {
+  document.getElementById('kpiCurrentStatement').textContent = formatGBP(r.currentStatement);
+  document.getElementById('kpiCurrentStreet').textContent = formatGBP(r.currentStreet);
+  document.getElementById('kpiTrueStatement').textContent = formatGBP(r.trueStatementBalance);
+  document.getElementById('kpiTrueStreet').textContent = formatGBP(r.trueStreetBalance);
+
+  const trueDiffEl = document.getElementById('kpiTrueDifference');
+  trueDiffEl.textContent = formatGBP(r.trueDifference);
+  trueDiffEl.className = 'value' + (r.trueDifference < 0 ? ' negative' : r.trueDifference > 0 ? ' positive' : '');
+
+  const finalDiffEl = document.getElementById('kpiFinalDifference');
+  finalDiffEl.textContent = formatGBP(r.finalDifference);
+  finalDiffEl.className = 'value' + (r.finalDifference < 0 ? ' negative' : r.finalDifference > 0 ? ' positive' : '');
+
+  document.getElementById('statusFinalValue').textContent = formatGBP(r.finalDifference);
+
+  const badge = document.getElementById('statusBadge');
+  const label = document.getElementById('statusLabel');
+  badge.classList.remove('balanced', 'minor', 'review');
+  if (r.status === 'balanced') { badge.classList.add('balanced'); label.textContent = 'Balanced'; }
+  else if (r.status === 'minor') { badge.classList.add('minor'); label.textContent = 'Minor difference'; }
+  else { badge.classList.add('review'); label.textContent = 'Needs review'; }
+
+  const dateVal = document.getElementById('inLastImport').value;
+  document.getElementById('lastImportDisplay').textContent = dateVal
+    ? 'Last import: ' + formatDateDisplay(dateVal)
+    : 'Last import: not set';
+}
+
+function formatDateDisplay(isoDate) {
+  const d = new Date(isoDate + 'T00:00:00');
+  if (isNaN(d.getTime())) return isoDate;
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+// Renders the unreconciled transactions table + summary chips, based
+// on state.unreconciledRows and the active filter.
+function renderTable() {
+  const tbody = document.getElementById('txnTableBody');
+  const rows = state.unreconciledRows;
+
+  // Summary chips always reflect the FULL unreconciled set, regardless
+  // of which filter the table itself is showing.
+  const totalDebits = rows.reduce((sum, r) => sum + (cleanCurrency(r.debit) > 0 ? cleanCurrency(r.debit) : 0), 0);
+  const totalCredits = rows.reduce((sum, r) => sum + (cleanCurrency(r.credit) > 0 ? cleanCurrency(r.credit) : 0), 0);
+  document.getElementById('chipCount').textContent = rows.length;
+  document.getElementById('chipDebits').textContent = formatGBP(totalDebits);
+  document.getElementById('chipCredits').textContent = formatGBP(totalCredits);
+
+  let filtered = rows;
+  if (state.tableFilter === 'debits') filtered = rows.filter(r => cleanCurrency(r.debit) > 0);
+  if (state.tableFilter === 'credits') filtered = rows.filter(r => cleanCurrency(r.credit) > 0);
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">' +
+      (state.csvLoaded ? 'No unreconciled transactions match this filter.' : 'Upload a CSV above to see unreconciled transactions here.') +
+      '</div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(r => {
+    const debit = cleanCurrency(r.debit);
+    const credit = cleanCurrency(r.credit);
+    return '<tr>' +
+      '<td>' + escapeHtml(r.date) + '</td>' +
+      '<td>' + escapeHtml(r['relates to']) + '</td>' +
+      '<td>' + escapeHtml(r.type) + '</td>' +
+      '<td>' + escapeHtml(r.reference) + '</td>' +
+      '<td>' + escapeHtml(r.description) + '</td>' +
+      '<td class="num debit">' + (debit > 0 ? formatGBP(debit) : '–') + '</td>' +
+      '<td class="num credit">' + (credit > 0 ? formatGBP(credit) : '–') + '</td>' +
+      '<td><span class="recon-pill">' + escapeHtml(r['reconciled?'] || 'No') + '</span></td>' +
+      '</tr>';
+  }).join('');
+}
+
+function escapeHtml(str) {
+  return String(str || '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function renderReasons() {
+  const grid = document.getElementById('reasonsGrid');
+  grid.innerHTML = REASONS.map((reason, idx) => {
+    const id = 'reason' + idx;
+    return '<div class="reason-card" data-idx="' + idx + '">' +
+      '<input type="checkbox" id="' + id + '">' +
+      '<label for="' + id + '">' + escapeHtml(reason) + '</label>' +
+      '</div>';
+  }).join('');
+
+  grid.querySelectorAll('.reason-card').forEach(card => {
+    const checkbox = card.querySelector('input');
+    checkbox.addEventListener('change', () => card.classList.toggle('checked', checkbox.checked));
+  });
+}
+
+/* ---------------------------------------------------------------------
+   7. EVENT WIRING
+   --------------------------------------------------------------------- */
+
+// Any manual input change triggers a recalculation.
+['inCurrentStatement', 'inCurrentStreet', 'inOutgoing', 'inIncoming', 'inImported', 'inDiscrepancy', 'inLastImport']
+  .forEach(id => document.getElementById(id).addEventListener('input', recalculate));
+
+// --- CSV upload (click + drag/drop) -----------------------------------
+
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('csvFile');
+const fileChip = document.getElementById('fileChip');
+const fileChipName = document.getElementById('fileChipName');
+const csvWarning = document.getElementById('csvWarning');
+
+dropzone.addEventListener('click', () => fileInput.click());
+
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzone.classList.remove('dragover');
+  if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+
+fileInput.addEventListener('change', () => {
+  if (fileInput.files && fileInput.files[0]) handleFile(fileInput.files[0]);
+});
+
+document.getElementById('removeFileBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  resetCsvState();
+});
+
+function handleFile(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => processCSV(e.target.result, file.name);
+  reader.onerror = () => showWarning('Could not read that file. Please try exporting the CSV again from Street.');
+  reader.readAsText(file);
+}
+
+function showWarning(msg) {
+  csvWarning.textContent = msg;
+  csvWarning.classList.add('show');
+}
+function clearWarning() {
+  csvWarning.classList.remove('show');
+  csvWarning.textContent = '';
+}
+
+function processCSV(text, fileName) {
+  clearWarning();
+  const rawRows = parseCSVText(text);
+  const { objects, missingColumns } = csvRowsToObjects(rawRows);
+
+  if (missingColumns.length > 0) {
+    showWarning('Heads up — this CSV is missing the following expected column(s): ' +
+      missingColumns.join(', ') + '. The calculator will still try to work with what is available, ' +
+      'but figures below may be incomplete. You can always type values in manually.');
+  }
+
+  // Keep every row for reference, and a filtered list of just the
+  // unreconciled ones (Reconciled? = No), which is what the formulas use.
+  state.allTransactionRows = objects;
+  state.unreconciledRows = objects.filter(r => normaliseHeader(r['reconciled?']) === UNRECONCILED_VALUE);
+  state.csvLoaded = true;
+
+  // Sum unreconciled debits (outgoing payments) — shown as a NEGATIVE
+  // figure because they reduce the true statement balance.
+  const outgoingTotal = state.unreconciledRows.reduce((sum, r) => {
+    const debit = cleanCurrency(r.debit);
+    return sum + (debit > 0 ? debit : 0);
+  }, 0);
+
+  // Sum unreconciled credits (incoming bank transactions) — shown as
+  // a positive figure by default; the user can still override it.
+  const incomingTotal = state.unreconciledRows.reduce((sum, r) => {
+    const credit = cleanCurrency(r.credit);
+    return sum + (credit > 0 ? credit : 0);
+  }, 0);
+
+  document.getElementById('inOutgoing').value = (-Math.abs(outgoingTotal)).toFixed(2);
+  document.getElementById('inIncoming').value = Math.abs(incomingTotal).toFixed(2);
+  document.getElementById('inOutgoing').classList.add('is-override');
+  document.getElementById('inIncoming').classList.add('is-override');
+
+  fileChipName.textContent = fileName + ' — ' + state.unreconciledRows.length + ' unreconciled row(s) found';
+  fileChip.classList.add('show');
+
+  renderTable();
+  recalculate();
+}
+
+function resetCsvState() {
+  state.allTransactionRows = [];
+  state.unreconciledRows = [];
+  state.csvLoaded = false;
+  fileInput.value = '';
+  fileChip.classList.remove('show');
+  clearWarning();
+  document.getElementById('inOutgoing').classList.remove('is-override');
+  document.getElementById('inIncoming').classList.remove('is-override');
+  renderTable();
+}
+
+// --- Table filter toggle ----------------------------------------------
+
+document.getElementById('filterToggle').addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  document.querySelectorAll('#filterToggle button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.tableFilter = btn.dataset.filter;
+  renderTable();
+});
+
+// --- Clear calculator ---------------------------------------------------
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  ['inCurrentStatement', 'inCurrentStreet', 'inOutgoing', 'inIncoming', 'inImported', 'inDiscrepancy'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('inLastImport').value = '';
+  resetCsvState();
+  recalculate();
+});
+
+// --- Copy summary ---------------------------------------------------------
+
+document.getElementById('copyBtn').addEventListener('click', () => {
+  const currentStatement = fieldValue('inCurrentStatement');
+  const currentStreet = fieldValue('inCurrentStreet');
+  const unreconciledOutgoing = fieldValue('inOutgoing');
+  const unreconciledIncoming = fieldValue('inIncoming');
+  const importedNotReconciled = fieldValue('inImported');
+  const trialBalanceDiscrepancy = fieldValue('inDiscrepancy');
+  const trueStatementBalance = currentStatement + unreconciledOutgoing;
+  const trueStreetBalance = currentStreet - unreconciledIncoming + importedNotReconciled;
+  const trueDifference = trueStatementBalance - trueStreetBalance;
+  const finalDifference = trueDifference - trialBalanceDiscrepancy;
+
+  const absFinal = Math.abs(finalDifference);
+  let statusLabel = 'Needs Review';
+  if (absFinal < BALANCED_TOLERANCE) statusLabel = 'Balanced';
+  else if (absFinal < MINOR_THRESHOLD) statusLabel = 'Minor Difference';
+
+  const dateVal = document.getElementById('inLastImport').value;
+  const dateDisplay = dateVal ? formatDateDisplay(dateVal) : 'not set';
+
+  const summary =
+`Street Accounting Reconciliation Summary
+
+Current statement: ${formatGBP(currentStatement)}
+Last import: ${dateDisplay}
+Current Street: ${formatGBP(currentStreet)}
+
+Outgoing account transactions unreconciled in Street: ${formatGBP(unreconciledOutgoing)}
+True statement balance: ${formatGBP(trueStatementBalance)}
+
+Incoming account transactions unreconciled in Street: ${formatGBP(unreconciledIncoming)}
+Imported transactions not yet reconciled: ${formatGBP(importedNotReconciled)}
+True Street balance: ${formatGBP(trueStreetBalance)}
+
+True difference: ${formatGBP(trueDifference)}
+Network Trial Balance Discrepancy: ${formatGBP(trialBalanceDiscrepancy)}
+Final difference after trial balance: ${formatGBP(finalDifference)}
+
+Status: ${statusLabel}`;
+
+  copyToClipboard(summary);
+});
+
+function copyToClipboard(text) {
+  const btn = document.getElementById('copyBtn');
+  const originalText = btn.textContent;
+
+  function flashCopied() {
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = originalText; }, 1600);
+  }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(flashCopied).catch(() => fallbackCopy(text, flashCopied));
+  } else {
+    fallbackCopy(text, flashCopied);
+  }
+}
+
+function fallbackCopy(text, onDone) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } catch (e) { /* no-op */ }
+  document.body.removeChild(ta);
+  if (onDone) onDone();
+}
+
+/* ---------------------------------------------------------------------
+   INITIALISE
+   --------------------------------------------------------------------- */
+
+renderReasons();
+renderTable();
+recalculate();
+
+</script>
+</body>
+</html>
