@@ -181,6 +181,12 @@ section{ margin-bottom:28px; }
   .grid-2col{ grid-template-columns:1fr; }
 }
 
+.csv-stack{
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+}
+
 .field-group{ margin-bottom:16px; }
 .field-group label{
   display:block;
@@ -584,6 +590,7 @@ footer.note{
       <ol>
         <li>Enter the current statement balance, current Street balance and last import date.</li>
         <li>Upload the <b>Street &gt; All Transactions</b> CSV export, or skip this and type the unreconciled totals in manually.</li>
+        <li>Upload the <b>bank statement lines</b> CSV export to auto-fill imported transactions not yet reconciled, or type it in manually.</li>
         <li>Review the KPI cards and status badge below, then use <b>Copy summary</b> to paste the result into Slack, HubSpot or an email.</li>
       </ol>
     </div>
@@ -645,7 +652,7 @@ footer.note{
           <span class="prefix">£</span>
           <input type="text" id="inImported" class="currency-input" inputmode="decimal" placeholder="0.00">
         </div>
-        <p class="field-hint">Manual entry only. Added to the True Street balance.</p>
+        <p class="field-hint">Auto-filled from the bank statement lines CSV (unreconciled credits minus unreconciled debits). Added to the True Street balance. Edit freely if needed.</p>
       </div>
 
       <div class="field-group" style="margin-bottom:0;">
@@ -657,29 +664,57 @@ footer.note{
       </div>
     </div>
 
-    <!-- CSV UPLOAD CARD -->
-    <div class="card">
-      <div class="section-title">
-        <h2><span class="step-no">2</span>Account transactions CSV</h2>
+    <!-- CSV UPLOAD CARDS -->
+    <div class="csv-stack">
+
+      <div class="card">
+        <div class="section-title">
+          <h2><span class="step-no">2</span>Account transactions CSV</h2>
+        </div>
+
+        <div class="dropzone" id="dropzone">
+          <div class="upload-icon">&#8593;</div>
+          <p class="main">Drop CSV here, or click to browse</p>
+          <p class="sub">Export from Street &gt; All Transactions</p>
+          <input type="file" id="csvFile" accept=".csv,text/csv">
+        </div>
+
+        <div class="file-chip" id="fileChip">
+          <span id="fileChipName">file.csv</span>
+          <button id="removeFileBtn" type="button">Remove</button>
+        </div>
+
+        <div class="warning-banner" id="csvWarning"></div>
+
+        <p class="field-hint" style="margin-top:14px;">
+          Expected columns: Date, Relates To, Type, Reference, Description, Debit, Credit, Reconciled?
+        </p>
       </div>
 
-      <div class="dropzone" id="dropzone">
-        <div class="upload-icon">&#8593;</div>
-        <p class="main">Drop CSV here, or click to browse</p>
-        <p class="sub">Export from Street &gt; All Transactions</p>
-        <input type="file" id="csvFile" accept=".csv,text/csv">
+      <div class="card">
+        <div class="section-title">
+          <h2><span class="step-no">3</span>Bank statement lines CSV</h2>
+        </div>
+
+        <div class="dropzone" id="dropzone2">
+          <div class="upload-icon">&#8593;</div>
+          <p class="main">Drop CSV here, or click to browse</p>
+          <p class="sub">Export from Street &gt; Bank Transactions</p>
+          <input type="file" id="csvFile2" accept=".csv,text/csv">
+        </div>
+
+        <div class="file-chip" id="fileChip2">
+          <span id="fileChipName2">file.csv</span>
+          <button id="removeFileBtn2" type="button">Remove</button>
+        </div>
+
+        <div class="warning-banner" id="csvWarning2"></div>
+
+        <p class="field-hint" style="margin-top:14px;">
+          Expected columns: Date, Related to, Reference, Description, Payee, Debit, Credit, Status
+        </p>
       </div>
 
-      <div class="file-chip" id="fileChip">
-        <span id="fileChipName">file.csv</span>
-        <button id="removeFileBtn" type="button">Remove</button>
-      </div>
-
-      <div class="warning-banner" id="csvWarning"></div>
-
-      <p class="field-hint" style="margin-top:14px;">
-        Expected columns: Date, Relates To, Type, Reference, Description, Debit, Credit, Reconciled?
-      </p>
     </div>
 
   </section>
@@ -697,7 +732,7 @@ footer.note{
        =================================================================== -->
   <section>
     <div class="section-title">
-      <h2><span class="step-no">3</span>Results</h2>
+      <h2><span class="step-no">4</span>Results</h2>
     </div>
 
     <div class="kpi-grid">
@@ -741,7 +776,7 @@ footer.note{
        =================================================================== -->
   <section>
     <div class="section-title">
-      <h2><span class="step-no">4</span>Unreconciled transactions</h2>
+      <h2><span class="step-no">5</span>Unreconciled account transactions</h2>
     </div>
 
     <div class="chips-row">
@@ -778,11 +813,53 @@ footer.note{
   </section>
 
   <!-- ===================================================================
+       STATEMENT LINES REVIEW TABLE
+       =================================================================== -->
+  <section>
+    <div class="section-title">
+      <h2><span class="step-no">6</span>Unreconciled statement lines</h2>
+    </div>
+
+    <div class="chips-row">
+      <span class="chip">Count: <b id="chipCount2">0</b></span>
+      <span class="chip">Total unreconciled debits: <b id="chipDebits2">£0.00</b></span>
+      <span class="chip">Total unreconciled credits: <b id="chipCredits2">£0.00</b></span>
+      <span class="chip">Net (credits − debits): <b id="chipNet2">£0.00</b></span>
+    </div>
+
+    <div class="toggle-group" id="filterToggle2">
+      <button type="button" data-filter="all" class="active">All unreconciled</button>
+      <button type="button" data-filter="debits">Debits only</button>
+      <button type="button" data-filter="credits">Credits only</button>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Related to</th>
+            <th>Reference</th>
+            <th>Description</th>
+            <th>Payee</th>
+            <th style="text-align:right;">Debit</th>
+            <th style="text-align:right;">Credit</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="stmtTableBody">
+          <tr><td colspan="8"><div class="empty-state">Upload a bank statement lines CSV above to see unreconciled lines here.</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===================================================================
        POSSIBLE REASONS
        =================================================================== -->
   <section>
     <div class="section-title">
-      <h2><span class="step-no">5</span>Possible reasons for discrepancies</h2>
+      <h2><span class="step-no">7</span>Possible reasons for discrepancies</h2>
     </div>
     <div class="reasons-grid" id="reasonsGrid">
       <!-- populated by JS from REASONS array, so the list is easy to edit later -->
@@ -818,6 +895,12 @@ const EXPECTED_COLUMNS = ['Date', 'Relates To', 'Type', 'Reference', 'Descriptio
 
 // A row counts as "unreconciled" only when this column reads exactly "no".
 const UNRECONCILED_VALUE = 'no';
+
+// Columns we expect in the "Street > Bank Transactions" (statement lines) export.
+const STATEMENT_EXPECTED_COLUMNS = ['Date', 'Related to', 'Reference', 'Description', 'Payee', 'Debit', 'Credit', 'Status'];
+
+// A statement line counts as "unreconciled" only when Status reads exactly "unreconciled".
+const STATEMENT_UNRECONCILED_VALUE = 'unreconciled';
 
 // Status badge thresholds — tweak these if the business definition of
 // "minor" ever changes.
@@ -895,6 +978,11 @@ function normaliseHeader(h) {
 // A small hand-rolled CSV parser (no external libraries). Handles
 // quoted fields, escaped quotes (""), and commas inside quoted fields.
 function parseCSVText(text) {
+  // Street's CSV exports are saved with a leading byte-order-mark. Left in
+  // place it would attach itself to the first header cell (e.g. "Date"
+  // becomes "\uFEFFDate") and silently break column matching, so strip it.
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+
   const rows = [];
   let row = [];
   let field = '';
@@ -930,13 +1018,14 @@ function parseCSVText(text) {
 
 // Converts parsed CSV rows into an array of objects keyed by the
 // original header text, plus a normalised lookup for matching.
-function csvRowsToObjects(rows) {
-  if (rows.length === 0) return { objects: [], missingColumns: EXPECTED_COLUMNS.slice() };
+function csvRowsToObjects(rows, expectedColumns) {
+  expectedColumns = expectedColumns || EXPECTED_COLUMNS;
+  if (rows.length === 0) return { objects: [], missingColumns: expectedColumns.slice() };
 
   const headerRow = rows[0];
   const headerMap = headerRow.map(h => normaliseHeader(h));
 
-  const missingColumns = EXPECTED_COLUMNS.filter(
+  const missingColumns = expectedColumns.filter(
     col => !headerMap.includes(normaliseHeader(col))
   );
 
@@ -958,6 +1047,12 @@ const state = {
   unreconciledRows: [],       // just the rows where Reconciled? = No
   csvLoaded: false,
   tableFilter: 'all',         // 'all' | 'debits' | 'credits'
+
+  allStatementRows: [],       // every row from the bank statement lines CSV
+  unreconciledStatementRows: [], // just the rows where Status = Unreconciled
+  statementCsvLoaded: false,
+  statementTableFilter: 'all',   // 'all' | 'debits' | 'credits'
+
   reasonsChecked: {}          // reason text -> bool, for the checklist
 };
 
@@ -1085,6 +1180,46 @@ function renderTable() {
       '<td class="num debit">' + (debit > 0 ? formatGBP(debit) : '–') + '</td>' +
       '<td class="num credit">' + (credit > 0 ? formatGBP(credit) : '–') + '</td>' +
       '<td><span class="recon-pill">' + escapeHtml(r['reconciled?'] || 'No') + '</span></td>' +
+      '</tr>';
+  }).join('');
+}
+
+// Renders the unreconciled statement lines table + summary chips, based
+// on state.unreconciledStatementRows and the active filter.
+function renderStatementTable() {
+  const tbody = document.getElementById('stmtTableBody');
+  const rows = state.unreconciledStatementRows;
+
+  const totalDebits = rows.reduce((sum, r) => sum + (cleanCurrency(r.debit) > 0 ? cleanCurrency(r.debit) : 0), 0);
+  const totalCredits = rows.reduce((sum, r) => sum + (cleanCurrency(r.credit) > 0 ? cleanCurrency(r.credit) : 0), 0);
+  document.getElementById('chipCount2').textContent = rows.length;
+  document.getElementById('chipDebits2').textContent = formatGBP(totalDebits);
+  document.getElementById('chipCredits2').textContent = formatGBP(totalCredits);
+  document.getElementById('chipNet2').textContent = formatGBP(totalCredits - totalDebits);
+
+  let filtered = rows;
+  if (state.statementTableFilter === 'debits') filtered = rows.filter(r => cleanCurrency(r.debit) > 0);
+  if (state.statementTableFilter === 'credits') filtered = rows.filter(r => cleanCurrency(r.credit) > 0);
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">' +
+      (state.statementCsvLoaded ? 'No unreconciled statement lines match this filter.' : 'Upload a bank statement lines CSV above to see unreconciled lines here.') +
+      '</div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(r => {
+    const debit = cleanCurrency(r.debit);
+    const credit = cleanCurrency(r.credit);
+    return '<tr>' +
+      '<td>' + escapeHtml(r.date) + '</td>' +
+      '<td>' + escapeHtml(r['related to']) + '</td>' +
+      '<td>' + escapeHtml(r.reference) + '</td>' +
+      '<td>' + escapeHtml(r.description) + '</td>' +
+      '<td>' + escapeHtml(r.payee) + '</td>' +
+      '<td class="num debit">' + (debit > 0 ? formatGBP(debit) : '–') + '</td>' +
+      '<td class="num credit">' + (credit > 0 ? formatGBP(credit) : '–') + '</td>' +
+      '<td><span class="recon-pill">' + escapeHtml(r.status || 'Unreconciled') + '</span></td>' +
       '</tr>';
   }).join('');
 }
@@ -1228,6 +1363,111 @@ document.getElementById('filterToggle').addEventListener('click', (e) => {
   renderTable();
 });
 
+// --- Bank statement lines CSV upload (click + drag/drop) ---------------
+
+const dropzone2 = document.getElementById('dropzone2');
+const fileInput2 = document.getElementById('csvFile2');
+const fileChip2 = document.getElementById('fileChip2');
+const fileChipName2 = document.getElementById('fileChipName2');
+const csvWarning2 = document.getElementById('csvWarning2');
+
+dropzone2.addEventListener('click', () => fileInput2.click());
+
+dropzone2.addEventListener('dragover', e => { e.preventDefault(); dropzone2.classList.add('dragover'); });
+dropzone2.addEventListener('dragleave', () => dropzone2.classList.remove('dragover'));
+dropzone2.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzone2.classList.remove('dragover');
+  if (e.dataTransfer.files && e.dataTransfer.files[0]) handleStatementFile(e.dataTransfer.files[0]);
+});
+
+fileInput2.addEventListener('change', () => {
+  if (fileInput2.files && fileInput2.files[0]) handleStatementFile(fileInput2.files[0]);
+});
+
+document.getElementById('removeFileBtn2').addEventListener('click', (e) => {
+  e.stopPropagation();
+  resetStatementCsvState();
+});
+
+function handleStatementFile(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => processStatementCSV(e.target.result, file.name);
+  reader.onerror = () => showStatementWarning('Could not read that file. Please try exporting the CSV again from Street.');
+  reader.readAsText(file);
+}
+
+function showStatementWarning(msg) {
+  csvWarning2.textContent = msg;
+  csvWarning2.classList.add('show');
+}
+function clearStatementWarning() {
+  csvWarning2.classList.remove('show');
+  csvWarning2.textContent = '';
+}
+
+function processStatementCSV(text, fileName) {
+  clearStatementWarning();
+  const rawRows = parseCSVText(text);
+  const { objects, missingColumns } = csvRowsToObjects(rawRows, STATEMENT_EXPECTED_COLUMNS);
+
+  if (missingColumns.length > 0) {
+    showStatementWarning('Heads up — this CSV is missing the following expected column(s): ' +
+      missingColumns.join(', ') + '. The calculator will still try to work with what is available, ' +
+      'but figures below may be incomplete. You can always type the value in manually.');
+  }
+
+  // Keep every row for reference, and a filtered list of just the
+  // unreconciled statement lines (Status = Unreconciled), which is what
+  // the formula uses.
+  state.allStatementRows = objects;
+  state.unreconciledStatementRows = objects.filter(r => normaliseHeader(r.status) === STATEMENT_UNRECONCILED_VALUE);
+  state.statementCsvLoaded = true;
+
+  // Net of unreconciled statement lines: sum of unreconciled credits minus
+  // sum of unreconciled debits. This is added to the True Street balance.
+  const creditsTotal = state.unreconciledStatementRows.reduce((sum, r) => {
+    const credit = cleanCurrency(r.credit);
+    return sum + (credit > 0 ? credit : 0);
+  }, 0);
+  const debitsTotal = state.unreconciledStatementRows.reduce((sum, r) => {
+    const debit = cleanCurrency(r.debit);
+    return sum + (debit > 0 ? debit : 0);
+  }, 0);
+  const netAmount = creditsTotal - debitsTotal;
+
+  document.getElementById('inImported').value = netAmount.toFixed(2);
+  document.getElementById('inImported').classList.add('is-override');
+
+  fileChipName2.textContent = fileName + ' — ' + state.unreconciledStatementRows.length + ' unreconciled line(s) found';
+  fileChip2.classList.add('show');
+
+  renderStatementTable();
+  recalculate();
+}
+
+function resetStatementCsvState() {
+  state.allStatementRows = [];
+  state.unreconciledStatementRows = [];
+  state.statementCsvLoaded = false;
+  fileInput2.value = '';
+  fileChip2.classList.remove('show');
+  clearStatementWarning();
+  document.getElementById('inImported').classList.remove('is-override');
+  renderStatementTable();
+}
+
+// --- Statement lines table filter toggle --------------------------------
+
+document.getElementById('filterToggle2').addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  document.querySelectorAll('#filterToggle2 button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.statementTableFilter = btn.dataset.filter;
+  renderStatementTable();
+});
+
 // --- Clear calculator ---------------------------------------------------
 
 document.getElementById('clearBtn').addEventListener('click', () => {
@@ -1236,6 +1476,7 @@ document.getElementById('clearBtn').addEventListener('click', () => {
   });
   document.getElementById('inLastImport').value = '';
   resetCsvState();
+  resetStatementCsvState();
   recalculate();
 });
 
@@ -1318,6 +1559,7 @@ function fallbackCopy(text, onDone) {
 
 renderReasons();
 renderTable();
+renderStatementTable();
 recalculate();
 
 </script>
