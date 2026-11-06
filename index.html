@@ -211,6 +211,19 @@ table.months td,table.months th{padding:8px 12px}
 .seg button[aria-pressed=true]{background:var(--purple);color:#fff}
 .seg button:disabled{opacity:.45;cursor:not-allowed}
 .cmpswitch .hint{font-size:12.5px;color:var(--text-2)}
+.goalbox{border:1px solid var(--border);border-radius:var(--r-md);background:#fff;margin-bottom:16px;overflow:hidden}
+.goalhead{padding:10px 16px;background:var(--navy);color:#fff;display:flex;gap:10px;flex-wrap:wrap;align-items:baseline}
+.goalhead strong{font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--lavender-dark)}
+.goalhead span{font-size:13px;color:rgba(255,255,255,.85)}
+.goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.goal{display:flex;gap:10px;padding:12px 16px;border-right:1px solid var(--border);align-items:flex-start}
+.goal:last-child{border-right:0}
+.goal .gi{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:12px;flex:none}
+.goal.ok .gi{background:var(--ok-soft);color:var(--ok-text)}.goal.bad .gi{background:var(--bad-soft);color:var(--bad-text)}.goal.unk .gi{background:var(--lavender);color:var(--purple)}
+.goal strong{display:block;font-size:13.5px}.goal span{font-size:12.5px;color:var(--muted)}
+.casebar{background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);padding:14px 18px;display:flex;flex-direction:column;gap:10px}
+.casehd{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}.casehd strong{font-size:14px}.casehd span{font-size:12.5px;color:var(--muted)}
+.banner.resume{background:var(--ok-soft);border-color:#BDE8D6;color:var(--ok-text)}
 .pdfnote{background:var(--warn-soft);color:var(--warn-text);border-radius:var(--r-sm);padding:9px 12px;font-size:13px;margin:0 0 12px}
 .preview{margin-top:14px;border:1px solid var(--border);border-radius:var(--r-md);overflow:auto;max-height:340px;background:#fff}
 .preview .pcap{font-size:12px;color:var(--muted);padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border)}
@@ -748,6 +761,7 @@ footer .mark{width:18px;color:var(--faint);flex:none}
     <span class="header-title">Client Accounting</span>
     <div class="modeswitch" role="tablist" aria-label="Choose a tool"><button type="button" role="tab" data-view="quick" aria-selected="false">Quick calculator</button><button type="button" role="tab" data-view="full" aria-selected="false">Full reconciliation</button></div>
     <div class="header-right" id="fullActions">
+      <button type="button" class="ghost" id="btnSaveCase">Download workbook</button>
       <button type="button" class="ghost" id="btnExample">Load example case</button>
       <button type="button" class="teal" id="btnClear">+ Start a new case</button>
     </div>
@@ -1061,9 +1075,18 @@ footer .mark{width:18px;color:var(--faint);flex:none}
     <span class="eyebrow">Full reconciliation</span>
     <h1>Client Account Reconciliation</h1>
     <p class="lede">Cross-check the client's bank statement against what's been imported into Street. Find the lines that are missing, duplicated or different, explain the gap between the bank, the Statement Balance and the Street Balance, and get a clear plan to put it right. Just need the headline numbers? <button type="button" class="linkbtn" data-view="quick">Use the quick calculator</button>.</p>
-    <span class="privacy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Files are read in your browser only. Nothing is uploaded or saved.</span>
+    <span class="privacy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Files are read in your browser. Nothing is uploaded or stored online. Download the workbook to keep your progress.</span>
   </div>
   <div class="banner" id="exampleBanner" hidden><span><strong>You're looking at an example case.</strong> The client, figures and files are made up so you can see how the tool works.</span><button type="button" class="small ghost" id="btnClear2">Clear it and start a real case</button></div>
+
+  <div class="casebar">
+    <div class="casehd"><strong>Save and pick up later</strong><span id="caseStatus">Nothing is saved until you download the workbook.</span></div>
+    <div class="rowflex">
+      <button type="button" class="small teal" id="btnExportCase">Download workbook (.xlsx)</button>
+      <button type="button" class="small ghost" id="btnImportCase">Open a saved workbook</button><input type="file" id="fileCase" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
+    </div>
+    <p class="notes" style="margin:0">The workbook is saved to your computer as "[Client] Client Account Reconciliation.xlsx", with the results, side by side, plan and notes on separate tabs, plus the data needed to reload it. Open it here later to carry on, or edit the Settings tab first (for example an opening balance) and reload it. Keep it on your computer or secure shared drive. Uploading it to Google Drive or Google Sheets would store it online.</p>
+  </div>
 
   <section class="step" id="step1">
     <div class="stephead"><div class="num">1</div><div><h2>Case details and opening balances</h2><p class="sub">Start here. The first part of any reconciliation is checking the opening balances were set up correctly at go-live.</p></div></div>
@@ -1260,7 +1283,7 @@ function loadText(slot,text,name){
   const rows=parseCSV(text);if(!rows.length){setStatus(slot,'bad','That file looks empty.');return}
   const hi=headerIndex(rows);const headers=rows[hi].map(x=>x.trim());const body=rows.slice(hi+1);const k=kind(headers);
   if(k!==slot){setStatus(slot,'bad',`This looks like ${KIND_NAME[k]}. Drop it in that box instead.`);S[slot]=null;analyse();return}
-  const obj={name,headers,rows:body,source:'csv'};
+  const obj={name,headers,rows:body,source:'csv',text};
   if(slot==='bank')obj.map=guessMap(headers,body);
   S[slot]=obj;
   if(slot==='bank'){buildMappingUI()}
@@ -1445,21 +1468,15 @@ function analyse(){
   const unrecStmt=sbt.filter(s=>!s.rec);
   const unrecStreet=SA?SA.lines.filter(a=>!a.rec&&a.date<=upTo):[];
   const satLate=SA?SA.lines.filter(a=>a.date>upTo).length:0;
-  unrecStmt.forEach(s=>{const c=unrecStreet.filter(a=>a.amt===s.amt&&Math.abs(a.date-s.date)<=7).sort((x,y)=>Math.abs(x.date-s.date)-Math.abs(y.date-s.date))[0];
-    const dpair=diffs.find(p=>p.s===s);
-    if(s.dupOf)s.hint={k:'warn',t:'Looks like a duplicate import. Check before reconciling.'};
-    else if(dpair)s.hint={k:'warn',l:DIFF_LABEL[dpair.kind],t:diffAdvice(dpair)};
-    else if(groups.some(g=>g.ss.includes(s)))s.hint={k:'ok',l:'Bulk or split',t:groupAdvice(groups.find(g=>g.ss.includes(s)))};
-    else if(!used.has(s.id)&&!dS.has(s.id))s.hint={k:'warn',t:'Not on the bank statement. Check this line before reconciling it.'};
-    else if(c){s.hint={k:'ok',t:`Matching Street entry on ${fd(c.date)}${c.rel?' ('+c.rel+')':''}. Match them on the Reconcile tab.`};s.hintMatch=c}
-    else s.hint={k:'info',t:s.amt>0?'Receipt it against the right ledger, or move it to Suspense if you can\'t identify it.':'Record the payment it relates to, then match it.'}});
   const missingByAmt=new Map();missing.forEach(b=>{if(!missingByAmt.has(b.amt))missingByAmt.set(b.amt,[]);missingByAmt.get(b.amt).push(b)});
-  const bankByAmt=new Map();B.lines.forEach(b=>{if(!bankByAmt.has(b.amt))bankByAmt.set(b.amt,[]);bankByAmt.get(b.amt).push(b)});
   const missIds=new Set(missing.map(b=>b.id)),bEnd=B.lines[B.lines.length-1].date;
-  let satMatch=null,satLines=null;const satInfo=new Map();
+  /* bank vs account transactions: one matching run that every hint below uses, so a line only ever has one suggestion */
+  let satMatch=null,satLines=null;const satInfo=new Map(),satByBank=new Map();
   if(SA){satLines=SA.lines.filter(a=>a.date>=goLive&&a.date<=upTo).map((a,i)=>({...a,ix:i,desc:[a.type,a.rel,a.desc].filter(Boolean).join(' · ')}));
     satMatch=smartMatch(bank,satLines,tol);
-    satMatch.matched.forEach(p=>satInfo.set(p.s.id,{pair:p.b}));satMatch.diffs.forEach(p=>satInfo.set(p.s.id,{diff:p}));satMatch.groups.forEach(g=>g.ss.forEach(x=>satInfo.set(x.id,{group:g})))}
+    satMatch.matched.forEach(p=>{satInfo.set(p.s.id,{pair:p.b});satByBank.set(p.b.id,{pair:p.s})});
+    satMatch.diffs.forEach(p=>{satInfo.set(p.s.id,{diff:p});satByBank.set(p.b.id,{diff:p})});
+    satMatch.groups.forEach(g=>{g.ss.forEach(x=>satInfo.set(x.id,{group:g}));g.bs.forEach(b=>satByBank.set(b.id,{group:g}))})}
   let satCmp=null;
   if(satMatch){const bw=new Map();satMatch.extra.forEach(s=>{const twin=satLines.find(o=>o!==s&&o.amt===s.amt&&o.date===s.date&&(o.desc===s.desc||sim(o.desc,s.desc)>=0.6));s.dupOf=twin||null});
     const ex=explainUnmatched({missing:satMatch.missing,extra:satMatch.extra,sAll:SA.lines,used:satMatch.used,dS:satMatch.dS,tol,B,label:'account transactions export',bankWhy:bw});
@@ -1467,21 +1484,39 @@ function analyse(){
   const gDate=g=>Math.min(...g.bs.map(b=>b.date));groups.sort((x,y)=>gDate(x)-gDate(y));if(satMatch)satMatch.groups.sort((x,y)=>gDate(x)-gDate(y));
   let gno=0;groups.forEach(g=>{g.no=++gno;g.src='sbt'});if(satMatch)satMatch.groups.forEach(g=>{g.no=++gno;g.src='sat'});
   const allGroups=groups.concat(satMatch?satMatch.groups:[]);
-  const pairOf=new Map(matched.map(p=>[p.b.id,p.s]));
-  unrecStreet.forEach(a=>{const sm=unrecStmt.find(s=>s.hintMatch===a);const dp=diffs.find(p=>p.b.amt===a.amt&&Math.abs(p.b.date-a.date)<=7);const info=satInfo.get(a.id)||{};
+  const pairOf=new Map(matched.map(p=>[p.b.id,p.s])),bankOf=new Map(matched.map(p=>[p.s.id,p.b]));
+  const sbtGroupOf=s=>groups.find(g=>g.ss.includes(s)),bankGroup=b=>groups.find(g=>g.bs.includes(b));
+  const entryName=a=>`${fd(a.date)}${a.rel?' ('+a.rel+')':''}`;
+  const groupLine=(g,isBank)=>g.kind==='bank'?(isBank?`This is the one bank line in bulk group ${g.no}. Reconcile it against the ${g.ss.length} Street entries in that group, not line by line.`:`Part of bulk group ${g.no}: together with ${g.ss.length-1} other Street entr${g.ss.length-1===1?'y':'ies'} it makes up the bank line of ${money(Math.abs(g.b.amt))} on ${fd(g.b.date)}. Reconcile the group together.`)
+    :(isBank?`One of ${g.bs.length} bank lines in split group ${g.no} that together make up the Street entry of ${money(Math.abs(g.s.amt))} on ${fd(g.s.date)}. Reconcile them together.`:`The Street entry in split group ${g.no}: the bank paid it in ${g.bs.length} parts. Reconcile it against those ${g.bs.length} bank lines together.`);
+  /* unreconciled statement lines */
+  unrecStmt.forEach(s=>{const dpair=diffs.find(p=>p.s===s),sg=sbtGroupOf(s),b=bankOf.get(s.id),rel=b?satByBank.get(b.id):null;
+    if(s.dupOf)s.hint={k:'warn',l:'Possible duplicate',t:'Looks like a duplicate import. Check before reconciling.'};
+    else if(dpair)s.hint={k:'warn',l:DIFF_LABEL[dpair.kind],t:diffAdvice(dpair)};
+    else if(sg)s.hint={k:'ok',cat:'bulk',l:`Bulk group ${sg.no}`,t:groupAdvice(sg)};
+    else if(!used.has(s.id)&&!dS.has(s.id))s.hint={k:'warn',l:'Not on bank statement',t:'Not on the bank statement. Check this line before reconciling it.'};
+    else if(rel&&rel.group)s.hint={k:'ok',cat:'bulk',l:`Bulk group ${rel.group.no}`,t:groupLine(rel.group,true)};
+    else if(rel&&rel.diff)s.hint={k:'warn',l:DIFF_LABEL[rel.diff.kind],t:`The Street entry for this (${entryName(rel.diff.s)}) is ${money(Math.abs(rel.diff.s.amt))}. ${diffAdvice(rel.diff)}`};
+    else if(rel&&rel.pair&&!rel.pair.rec){s.hint={k:'ok',l:'Ready to match',t:`Matching Street entry on ${entryName(rel.pair)}. Match them on the Reconcile tab.`};s.hintMatch=rel.pair}
+    else if(rel&&rel.pair)s.hint={k:'warn',l:'Entry already reconciled',t:`The matching Street entry (${entryName(rel.pair)}) is already reconciled to another line. Check whether this line was imported twice.`};
+    else s.hint={k:'info',l:'To receipt',t:s.amt>0?'No matching Street entry. Receipt it against the right ledger, or move it to Suspense if you can\'t identify it.':'No matching Street entry. Record the payment it relates to, then match it.'}});
+  /* unreconciled Street entries */
+  unrecStreet.forEach(a=>{const info=satInfo.get(a.id)||{};
     if(a.date<goLive)a.hint={k:'warn',l:'Before go-live',t:'Dated before go-live. Check whether this is an opening balance entry.'};
-    else if(sm)a.hint={k:'ok',l:'Ready to match',t:`Statement line on ${fd(sm.date)} is waiting. Match them on the Reconcile tab.`};
-    else if(info.group)a.hint={k:'ok',cat:'bulk',l:`Bulk group ${info.group.no}`,t:`${groupAdvice(info.group)} See group ${info.group.no} on the Bulk and split tab.`};
+    else if(info.group)a.hint={k:'ok',cat:'bulk',l:`Bulk group ${info.group.no}`,t:`${groupLine(info.group,false)} See group ${info.group.no} on the Bulk and split tab.`};
     else if(info.diff)a.hint={k:'warn',cat:info.diff.kind,l:DIFF_LABEL[info.diff.kind],t:`Matches the bank line on ${fd(info.diff.b.date)} (${money(Math.abs(info.diff.b.amt))}). ${diffAdvice(info.diff)}`};
-    else if(dp)a.hint={k:'warn',l:'Wrong amount imported',t:`The statement line for this was imported as ${money(dp.s.amt)} instead of ${money(dp.b.amt)}. Fix that line, then match.`};
-    else if(info.pair){const b=info.pair,st=pairOf.get(b.id);
+    else if(info.pair){const b=info.pair,st=pairOf.get(b.id),sd=diffs.find(p=>p.b===b),bg=bankGroup(b);
       if(missIds.has(b.id))a.hint={k:'warn',l:'In the bank, not imported',t:`On the bank statement (${fd(b.date)}) but that line hasn't been imported into Street. Import it, then match.`};
+      else if(sd)a.hint={k:'warn',l:'Wrong amount imported',t:`The statement line for this was imported as ${money(sd.s.amt)} instead of ${money(sd.b.amt)}. Fix that line, then match.`};
+      else if(bg)a.hint={k:'ok',cat:'bulk',l:`Bulk group ${bg.no}`,t:`The bank line on ${fd(b.date)} was imported into Street as several statement lines (group ${bg.no}). Reconcile this entry against them together.`};
       else if(st&&st.rec)a.hint={k:'warn',cat:'dupentry',l:'Possible duplicate entry',t:`The bank line on ${fd(b.date)} (${money(Math.abs(b.amt))}) fits this entry, but its statement line in Street is already reconciled to another entry. This may be a second ${a.amt>0?'receipt':'payment'} for the same money.`};
-      else a.hint={k:'ok',l:'In the bank',t:`The bank line on ${fd(b.date)} (${b.desc}) matches this entry. Find its statement line on the Reconcile tab and match them.`}}
+      else a.hint={k:'ok',l:'Ready to match',t:`The bank line on ${fd(b.date)} (${b.desc}) matches this entry and its statement line is waiting. Match them on the Reconcile tab.`}}
     else if(a.date>bEnd)a.hint={k:'info',l:'After bank statement',t:`Dated after the bank statement ends (${fd(bEnd)}). Check it on a later statement.`};
     else if(bEnd-a.date<=5)a.hint={k:'info',cat:'recent',l:a.amt>0?'May still be arriving':'May still be clearing',t:`Within 5 days of the end of the bank statement, so it may simply not have reached the bank yet.`};
     else if(a.amt>0)a.hint={k:'bad',cat:'neverIn',l:'No money in the bank',t:'Receipt recorded in Street, but nothing on the bank statement matches it, on its own or added to other entries. If the funds never arrived, the ledger is showing money the client account doesn\'t hold. Reverse it.'};
     else a.hint={k:'bad',cat:'neverOut',l:'Never left the bank',t:'Payment recorded in Street, but nothing on the bank statement matches it, on its own or added to other entries. If it was never paid, cancel or reverse it so the ledger is right.'}});
+  /* lines claimed by a bulk or split group are not suggested anywhere else */
+  const claimed=new Set();allGroups.forEach(g=>{g.bs.forEach(b=>claimed.add(b.id));g.ss.forEach(s=>claimed.add(s.id))});
   const noBank=unrecStreet.filter(a=>a.hint&&(a.hint.cat==='neverIn'||a.hint.cat==='neverOut'||a.hint.cat==='dupentry'));
   const recExtra=extra.filter(s=>s.rec);
 
@@ -1498,7 +1533,8 @@ function analyse(){
   const streetVar=(recStreet!=null&&expectedStreet!=null)?recStreet-expectedStreet:null;
 
   R={B,SB,SA,goLive,upTo,tol,bank,sbt,matched,missing,extra,diffs,breaks,bankOpen,bankOpenSrc,bankClose,bankCloseSrc,stmtOpen,stmtOpenSrc,streetOpen,ledgerOpen,suspenseOpen,stmtCalc,sbtNet,
-     unrecStmt,unrecStreet,unrecStmtNet,unrecStreetNet,missingNet,extraNet,diffNet,openDiff,expectedStmt,stmtUnexplained,recStmt,recStreet,expectedStreet,streetVar,streetOpenDiff,sbtBefore,sbtAfter,satLate,dir,why,widen7,widen14,cover,noBank,recExtra,groups,allGroups,satMatch,satLines,cmp:{sbt:{matched,missing,extra,diffs,groups,why,widen7,widen14,cover,bw:b=>b.why},sat:satCmp}};
+     unrecStmt,unrecStreet,unrecStmtNet,unrecStreetNet,missingNet,extraNet,diffNet,openDiff,expectedStmt,stmtUnexplained,recStmt,recStreet,expectedStreet,streetVar,streetOpenDiff,sbtBefore,sbtAfter,satLate,dir,why,widen7,widen14,cover,noBank,recExtra,groups,allGroups,satMatch,satLines,claimed,cmp:{sbt:{matched,missing,extra,diffs,groups,why,widen7,widen14,cover,bw:b=>b.why},sat:satCmp}};
+  if(window.__debug)window.__R=R;
   render()}
 
 /* ---------- render ---------- */
@@ -1533,7 +1569,7 @@ function render(){const r=R;
    <div class="panelbar"><span class="what" id="tabWhat">${esc(tabs.find(t=>t[0]===activeTab)[3])}</span><div class="rowflex"><input type="search" id="tabSearch" placeholder="Search this list" aria-label="Search this list"><button type="button" class="small ghost" id="btnCopyTable">Copy for spreadsheet</button></div></div>
    ${activeTab==='missing'&&r.missing.length&&CM==='sbt'?exportBar(r):''}${activeTab==='missing'&&CM==='sat'?'<p class="notes" style="margin:0 0 12px">These bank lines have no matching receipt or payment in Street\'s ledgers. To export lines for import, switch to Street bank transactions.</p>':''}
    <div class="tablewrap" id="tabTable"></div>`;
-  $('#results').innerHTML=tiles+checksHtml+bridge+tabHtml;
+  $('#results').innerHTML=goalHtml(r)+tiles+checksHtml+bridge+tabHtml;
   document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{activeTab=b.dataset.tab;render()}));
   document.querySelectorAll('[data-cmp]').forEach(b=>b.addEventListener('click',()=>{if(b.disabled)return;SB_STATE.mode=b.dataset.cmp;render()}));
   $('#tabSearch').addEventListener('input',renderTable);$('#btnCopyTable').addEventListener('click',()=>{const t=tableData();copyText([t.head.join('\t'),...t.rows.map(r=>r.map(c=>c.v).join('\t'))].join('\n'),`Copied ${t.rows.length} rows. Paste into Excel or Google Sheets.`)});
@@ -1548,29 +1584,38 @@ function missingCsv(r,scope){const set=exportSet(r,scope);const idx=new Set(set.
   S.bank.rows.forEach((row,i)=>{if(idx.has(i))out.push(S.bank.headers.map((h,c)=>csvCell(row[c])).join(','))});return {csv:out.join('\r\n')+'\r\n',n:set.length}}
 async function saveFile(filename,data){
   try{if(window.claude&&typeof window.claude.use==='function'){const dl=await window.claude.use('downloads');if(dl){try{await dl.save({filename,data});toast('Saved '+filename);return}catch(e){if(e&&e.code==='declined')return;if(e&&e.code==='rate_limited'){toast('A save is already open. Try again in a moment.');return}}}}}catch(e){}
-  try{const url=URL.createObjectURL(new Blob([data],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);toast('Downloaded '+filename)}catch(e){copyText(data,'Could not save a file here, so the CSV was copied instead')}}
+  try{const url=URL.createObjectURL((data instanceof Blob?data:new Blob([data],{type:'text/csv;charset=utf-8'})));const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);toast('Downloaded '+filename)}catch(e){copyText(data,'Could not save a file here, so the CSV was copied instead')}}
 function exportMissing(r){if(!r||!r.missing.length)return;const {csv,n}=missingCsv(r,exportScope);if(!n){toast('No lines in that selection');return}
   const slug=($('#cClient').value.trim()||'client').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
   saveFile(`${slug}-missing-bank-lines-${iso(r.goLive)}-to-${iso(r.upTo)}.csv`,csv)}
 const HOW_RULES=r=>[`Only lines dated ${fd(r.goLive)} (go-live) to ${fd(r.upTo)} are compared, on both sides.`,`A bank line and a Street line match when the amount is exactly the same to the penny, both are money in or both are money out, and the dates are no more than ${plural2(r.tol,'day')} apart (the Match dates within setting).`,'If more than one Street line fits, the closest date wins. The description is only used to break a tie, and each line can only be matched once.','Lines left over are checked for bulk and split payments: one line on one side that adds up exactly to 2 to 4 lines on the other within 5 days (this also catches rent with commission taken off).','Then for near misses: the same direction and date window with an amount out by £1 or less (pennies out), two digits swapped, or a matching description with a different amount.','Anything still unmatched goes into Missing from Street or Not on bank statement, with a reason against each line.'];
 const HOW_RISKS=['The Street export doesn\'t cover the whole period. The Bank Transactions export uses the dates picked in its pop-up, so lines after it ends look missing.','Dates further apart than the window. Bank feeds can use the posting date while the statement shows the transaction date, and weekends widen the gap.','A PDF read wrongly: a date in the wrong year, or an amount in the wrong column, which flips money in and out.','One bank line split into several Street lines, or several combined into one, so the amounts never match exactly.','Statement lines deleted in Street, which aren\'t in the export.','The wrong bank account exported, or a go-live date that doesn\'t match when the client started.'];
 function howHtml(r){return `<details class="howbox"><summary>How lines are matched<span class="sumline">: amount, direction (in or out) and date within ${plural2(r.tol,'day')}. Descriptions are only a tiebreak.</span></summary><div class="howgrid"><div><h4>The rules</h4><ol>${HOW_RULES(r).map(x=>`<li>${esc(x)}</li>`).join('')}</ol></div><div><h4>Where it can go wrong</h4><ul>${HOW_RISKS.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div></div></details>`}
+function goalHtml(r){const stmt=r.recStmt!=null?r.recStmt:r.stmtCalc,street=r.recStreet!=null?r.recStreet:r.expectedStreet,bank=r.bankClose;
+  const unrec=r.unrecStmt.length+(r.SA?r.unrecStreet.length:0);
+  const item=(ok,t,d)=>`<div class="goal ${ok==null?'unk':ok?'ok':'bad'}"><span class="gi" aria-hidden="true">${ok==null?'?':ok?'✓':'×'}</span><div><strong>${t}</strong><span>${d}</span></div></div>`;
+  const g1=bank==null||stmt==null?null:stmt===bank,g2=bank==null||street==null?null:street===bank,g3=r.SA?unrec===0:null;
+  return `<div class="goalbox"><div class="goalhead"><strong>The goal</strong><span>The Statement Balance and the Street Balance both match the real bank balance, and every transaction is reconciled in Street.</span></div><div class="goals">
+    ${item(g1,'Statement Balance matches the bank',bank==null||stmt==null?'Not known yet':g1?`Both ${money(bank)}`:`Statement ${money(stmt)}, bank ${money(bank)}: ${money(stmt-bank,{sign:true})} out`)}
+    ${item(g2,'Street Balance matches the bank',bank==null||street==null?'Not known yet':g2?`Both ${money(bank)}`:`Street ${money(street)}${r.recStreet!=null?'':' (worked out)'}, bank ${money(bank)}: ${money(street-bank,{sign:true})} out`)}
+    ${item(g3,'Everything reconciled',r.SA?(unrec?`${unrec} still to reconcile: ${r.unrecStmt.length} statement lines, ${r.unrecStreet.length} Street entries`:'Nothing left unreconciled'):'Add the Account Transactions export to check')}
+  </div></div>`}
 function tile(k,v,s,state){return `<div class="tile ${state}"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span><span class="s">${esc(s)}</span></div>`}
 function inOut(p){return [{v:p>0?plain(p):'',h:p>0?`<span class="in">${money(p)}</span>`:'',n:1},{v:p<0?plain(-p):'',h:p<0?money(-p):'',n:1}]}
-function tableData(){const r=R,C=R.cmp[cmpMode()],q=($('#tabSearch')&&$('#tabSearch').value||'').toLowerCase();let head=[],rows=[];
+function tableData(tabArg,modeArg){const tab=tabArg||activeTab,r=R,C=R.cmp[modeArg||cmpMode()]||R.cmp.sbt,q=tabArg?'':($('#tabSearch')&&$('#tabSearch').value||'').toLowerCase();let head=[],rows=[];
   const hint=h=>h?{v:(h.l?h.l+': ':'')+h.t,h:`<span class="chip ${h.k}">${esc(h.l||(h.k==='ok'?'Ready to match':h.k==='warn'?'Check':'To do'))}</span><div class="whyt">${esc(h.t)}</div>`}:{v:'',h:''};
   const whyCell=w=>w?{v:w.l+': '+w.t,h:`<span class="chip ${w.c}">${esc(w.l)}</span><div class="whyt">${esc(w.t)}</div>`}:{v:''};
-  if(activeTab==='missing'){head=['Date','Description','Money in','Money out','Why it\'s here'];rows=C.missing.map(b=>[{v:fd(b.date),d:1},{v:b.desc,desc:1},...inOut(b.amt),whyCell(C.bw(b))])}
-  if(activeTab==='extra'){head=['Date','Street description','Money in','Money out','Status','Why it\'s here'];rows=C.extra.map(s=>[{v:fd(s.date),d:1},{v:s.desc,desc:1},...inOut(s.amt),{v:s.status},whyCell(s.why)])}
-  if(activeTab==='diffs'){head=['Bank date','Street date','Description','Bank amount','Street amount','Difference','Likely cause and fix'];rows=C.diffs.map(p=>[{v:fd(p.b.date),d:1},{v:fd(p.s.date),d:1},{v:p.b.desc+'  |  Street: '+p.s.desc,desc:1},{v:plain(p.b.amt),h:money(p.b.amt),n:1},{v:plain(p.s.amt),h:money(p.s.amt),n:1},{v:plain(p.s.amt-p.b.amt),h:money(p.s.amt-p.b.amt,{sign:true}),n:1},whyCell({c:p.kind==='amount'?'bad':'warn',l:DIFF_LABEL[p.kind],t:diffAdvice(p)})])}
-  if(activeTab==='groups'){head=['Group','Compared with','Bank lines','Street lines','Total','What to do'];
+  if(tab==='missing'){head=['Date','Description','Money in','Money out','Why it\'s here'];rows=C.missing.map(b=>[{v:fd(b.date),d:1},{v:b.desc,desc:1},...inOut(b.amt),whyCell(C.bw(b))])}
+  if(tab==='extra'){head=['Date','Street description','Money in','Money out','Status','Why it\'s here'];rows=C.extra.map(s=>[{v:fd(s.date),d:1},{v:s.desc,desc:1},...inOut(s.amt),{v:s.status},whyCell(s.why)])}
+  if(tab==='diffs'){head=['Bank date','Street date','Description','Bank amount','Street amount','Difference','Likely cause and fix'];rows=C.diffs.map(p=>[{v:fd(p.b.date),d:1},{v:fd(p.s.date),d:1},{v:p.b.desc+'  |  Street: '+p.s.desc,desc:1},{v:plain(p.b.amt),h:money(p.b.amt),n:1},{v:plain(p.s.amt),h:money(p.s.amt),n:1},{v:plain(p.s.amt-p.b.amt),h:money(p.s.amt-p.b.amt,{sign:true}),n:1},whyCell({c:p.kind==='amount'?'bad':'warn',l:DIFF_LABEL[p.kind],t:diffAdvice(p)})])}
+  if(tab==='groups'){head=['Group','Compared with','Bank lines','Street lines','Total','What to do'];
     const ln=(x,isS)=>`${fd(x.date)}  ${x.desc}  ${plain(x.amt)}${isS&&x.rec!=null?(x.rec?' (reconciled)':' (not reconciled)'):''}`;
     const lh=(x,isS)=>`<div class="gl"><span class="d">${fd(x.date)}</span> ${esc(x.desc)} <strong>${money(x.amt,{sign:true})}</strong>${isS&&x.rec!=null?` <span class="chip ${x.rec?'ok':'warn'}">${x.rec?'Reconciled':'Not reconciled'}</span>`:''}</div>`;
     rows=C.groups.map(g=>[{v:String(g.no),h:`<strong>${g.no}</strong>`,n:1},{v:g.src==='sat'?'Account transactions':'Bank transactions'},{v:g.bs.map(b=>ln(b)).join(' + '),h:g.bs.map(b=>lh(b)).join(''),desc:1},{v:g.ss.map(s=>ln(s,1)).join(' + '),h:g.ss.map(s=>lh(s,1)).join(''),desc:1},{v:plain(g.bs.reduce((x,b)=>x+b.amt,0)),h:money(g.bs.reduce((x,b)=>x+b.amt,0),{sign:true}),n:1},whyCell({c:'info',l:g.kind==='bank'?`1 bank line = ${g.ss.length} Street lines`:`${g.bs.length} bank lines = 1 Street line`,t:groupAdvice(g)})])}
-  if(activeTab==='unstmt'){head=['Date','Street description','Money in','Money out','What to do'];rows=r.unrecStmt.map(s=>[{v:fd(s.date),d:1},{v:s.desc,desc:1},...inOut(s.amt),hint(s.hint)])}
-  if(activeTab==='nobank'){head=['Date','What','Relates to','Description','Money in','Money out','Why it\'s flagged'];rows=r.noBank.map(a=>[{v:fd(a.date),d:1},{v:a.type||'Entry'},{v:a.rel},{v:a.desc,desc:1},...inOut(a.amt),hint(a.hint)]).concat(r.recExtra.map(s=>[{v:fd(s.date),d:1},{v:'Statement line'},{v:''},{v:s.desc,desc:1},...inOut(s.amt),hint({k:'bad',l:'Reconciled, not in the bank',t:'This statement line is reconciled in Street but isn\'t on the bank statement. It may have been added by hand to clear a receipt or payment.'})]))}
-  if(activeTab==='unstreet'){head=['Date','Type','Relates to','Description','Money in','Money out','What to do'];rows=r.unrecStreet.map(a=>[{v:fd(a.date),d:1},{v:a.type},{v:a.rel},{v:a.desc,desc:1},...inOut(a.amt),hint(a.hint)])}
-  if(activeTab==='matched'){head=['Bank date','Street date','Days apart','Bank description','Street description','Amount','Street status'];rows=C.matched.slice().sort((x,y)=>x.b.date-y.b.date).map(p=>[{v:fd(p.b.date),d:1},{v:fd(p.s.date),d:1},{v:String(p.dd),n:1},{v:p.b.desc,desc:1},{v:p.s.desc,desc:1},{v:plain(p.b.amt),h:money(p.b.amt),n:1},{v:p.s.status}])}
+  if(tab==='unstmt'){head=['Date','Street description','Money in','Money out','What to do'];rows=r.unrecStmt.map(s=>[{v:fd(s.date),d:1},{v:s.desc,desc:1},...inOut(s.amt),hint(s.hint)])}
+  if(tab==='nobank'){head=['Date','What','Relates to','Description','Money in','Money out','Why it\'s flagged'];rows=r.noBank.map(a=>[{v:fd(a.date),d:1},{v:a.type||'Entry'},{v:a.rel},{v:a.desc,desc:1},...inOut(a.amt),hint(a.hint)]).concat(r.recExtra.map(s=>[{v:fd(s.date),d:1},{v:'Statement line'},{v:''},{v:s.desc,desc:1},...inOut(s.amt),hint({k:'bad',l:'Reconciled, not in the bank',t:'This statement line is reconciled in Street but isn\'t on the bank statement. It may have been added by hand to clear a receipt or payment.'})]))}
+  if(tab==='unstreet'){head=['Date','Type','Relates to','Description','Money in','Money out','What to do'];rows=r.unrecStreet.map(a=>[{v:fd(a.date),d:1},{v:a.type},{v:a.rel},{v:a.desc,desc:1},...inOut(a.amt),hint(a.hint)])}
+  if(tab==='matched'){head=['Bank date','Street date','Days apart','Bank description','Street description','Amount','Street status'];rows=C.matched.slice().sort((x,y)=>x.b.date-y.b.date).map(p=>[{v:fd(p.b.date),d:1},{v:fd(p.s.date),d:1},{v:String(p.dd),n:1},{v:p.b.desc,desc:1},{v:p.s.desc,desc:1},{v:plain(p.b.amt),h:money(p.b.amt),n:1},{v:p.s.status}])}
   if(q)rows=rows.filter(row=>row.some(c=>String(c.v).toLowerCase().includes(q)));
   return {head,rows}}
 function renderTable(){const t=tableData();const nIdx=t.rows[0]?t.rows[0].map(c=>!!c.n):[];
@@ -1750,10 +1795,10 @@ function renderSide(){const out=$('#sideOut');if(!out)return;const r=R;if(!r){ou
 function sideVisible(){const d=R._side,q=($('#sbSearch')&&$('#sbSearch').value||'').toLowerCase();
   return d.rows.filter(x=>{if(SB_STATE.show==='issues'&&(x.t==='match'||x.t==='late'))return false;if(SB_STATE.show==='months'&&!x.monthEnd)return false;
     if(q){const txt=[x.b&&x.b.desc,x.s&&x.s.desc,fd(x.date),x.b&&plain(x.b.amt),x.s&&plain(x.s.amt)].join(' ').toLowerCase();if(!txt.includes(q))return false}return true})}
-function sideTable(includeMonthRows){const d=R._side;const head=['Date','Bank description','Bank money in','Bank money out','Bank balance','Status','Street date','Street description','Street money in','Street money out','Street balance','Street + missing lines','Difference'];
-  const out=[head];sideVisible().forEach(x=>{const b=x.b?sbsAmt(x.b.amt):['',''],s=x.s?sbsAmt(x.s.amt):['',''];
+function sideTable(includeMonthRows,dArg,listArg){const d=dArg||R._side;const head=['Date','Bank description','Bank money in','Bank money out','Bank balance','Status','Street date','Street description','Street money in','Street money out','Street balance','Street + missing lines','Difference'];
+  const out=[head];(listArg||sideVisible()).forEach(x=>{const b=x.b?sbsAmt(x.b.amt):['',''],s=x.s?sbsAmt(x.s.amt):['',''];
     out.push([fd(x.date),x.b?x.b.desc:'',x.b?plain(Math.max(x.b.amt,0))||'':'',x.b&&x.b.amt<0?plain(-x.b.amt):'',plain(x.bRun),x.t==='diff'?(DIFF_LABEL[x.kind]||'Different amount'):x.t==='group'?`Bulk group ${x.g.no}`:x.t==='gpart'?`Part of group ${x.parent.g.no}`:ST_LABEL[x.t][1],x.s?fd(x.s.date):'',x.s?x.s.desc:'',x.s&&x.s.amt>0?plain(x.s.amt):'',x.s&&x.s.amt<0?plain(-x.s.amt):'',plain(x.sRun),plain(x.aRun),plain(x.diff)].map(v=>v==='0.00'&&false?'':v));
-    if(includeMonthRows&&x.monthEnd&&SB_STATE.show!=='months'){const m=x.monthEnd;out.push([`End of ${m.label}`,'','','',plain(m.bank),'','','','','',plain(m.street),plain(m.adj),plain(m.diff)])}});
+    if(includeMonthRows&&x.monthEnd&&(listArg||SB_STATE.show!=='months')){const m=x.monthEnd;out.push([`End of ${m.label}`,'','','',plain(m.bank),'','','','','',plain(m.street),plain(m.adj),plain(m.diff)])}});
   out.forEach((row,i)=>{if(i&&row[2]==='0.00')row[2]=''});return out}
 function renderSideRows(){const d=R._side;const vis=sideVisible();const LIM=10000;
   const first=d.first&&!d.first.opening?d.first:null;
@@ -1778,7 +1823,7 @@ function renderPlan(r){const steps=[];const span=a=>a.length?`${fd(Math.min(...a
   if(r.missing.length){const sure=r.missing.filter(l=>l.why&&(l.why.k==='none'||l.why.k==='taken')),unsure=r.missing.filter(l=>l.why&&(l.why.k==='date'||l.why.k==='dir'));
     if(unsure.length)steps.push({t:`Check ${unsure.length} near miss${unsure.length>1?'es':''} before importing`,d:'These have a line with the same amount in Street on a different date, or going the other way, so they may already be imported. Search the amount on the Bank Transactions tab to confirm.',b:unsure.slice(0,8).map(l=>`${fd(l.date)}  ${l.desc}  ${money(l.amt,{sign:true})}: ${l.why.l.toLowerCase()}`).concat(unsure.length>8?[`...and ${unsure.length-8} more`]:[])});
     if(sure.length)steps.push({t:`Import ${sure.length} missing statement line${sure.length>1?'s':''}`,d:`These have no matching amount in Street, so they're very likely not imported. Dated ${span(sure)}. Money in ${money(sum(sure,l=>l.amt>0))}, money out ${money(-sum(sure,l=>l.amt<0))}. Use Copy for spreadsheet on the Missing from Street list to build the import file, then receipt or match each line once imported.`,b:sure.slice(0,8).map(l=>`${fd(l.date)}  ${l.desc}  ${money(l.amt,{sign:true})}`).concat(sure.length>8?[`...and ${sure.length-8} more`]:[])})}
-  const allD=r.diffs.map(p=>({...p,src:'statement line'})).concat(r.cmp.sat?r.cmp.sat.diffs.map(p=>({...p,src:'ledger entry'})):[]);const pen=allD.filter(p=>p.kind==='pennies'),tra=allD.filter(p=>p.kind==='transposed'),amd=allD.filter(p=>p.kind==='amount');
+  const allD=r.diffs.map(p=>({...p,src:'statement line'})).concat(r.cmp.sat?r.cmp.sat.diffs.map(p=>({...p,src:'ledger entry'})):[]).filter(p=>!r.claimed.has(p.b.id)&&!r.claimed.has(p.s.id));const pen=allD.filter(p=>p.kind==='pennies'),tra=allD.filter(p=>p.kind==='transposed'),amd=allD.filter(p=>p.kind==='amount');
   if(pen.length)steps.push({t:`Clear ${pen.length} line${pen.length>1?'s':''} out by pennies`,d:'For each one, record the small difference in Street (a payment or transfer out if Street shows more, a receipt or transfer in if it shows less), or correct the entry. Then reconcile the lines together.',b:pen.map(p=>`${fd(p.b.date)}  ${p.b.desc}: bank ${money(p.b.amt)}, Street ${money(p.s.amt)}${p.src?` (${p.src})`:''}. ${(p.s.amt-p.b.amt)>0?'Record '+money(p.s.amt-p.b.amt)+' going out':'Record '+money(p.b.amt-p.s.amt)+' coming in'}`)});
   if(tra.length)steps.push({t:`Fix ${tra.length} amount${tra.length>1?'s':''} with digits swapped`,d:'These were keyed in with two digits the wrong way round. Correct the amount in Street, then reconcile.',b:tra.map(p=>`${fd(p.b.date)}  ${p.b.desc}: bank ${money(p.b.amt)}, Street ${money(p.s.amt)}${p.src?` (${p.src})`:''}`)});
   if(amd.length)steps.push({t:`Correct ${amd.length} line${amd.length>1?'s':''} with the wrong amount`,d:'Check which figure is right. Delete the wrong statement line and import the correct one, or fix the amount if it was added manually, or record the difference. Re-match any Street entry linked to it.',b:amd.map(p=>`${fd(p.b.date)}  ${p.b.desc}: bank ${money(p.b.amt)}, Street ${money(p.s.amt)}${p.src?` (${p.src})`:''}`)});
@@ -1786,8 +1831,8 @@ function renderPlan(r){const steps=[];const span=a=>a.length?`${fd(Math.min(...a
   const dups=r.extra.filter(s=>s.dupOf),other=r.extra.filter(s=>!s.dupOf);
   if(dups.length)steps.push({t:`Remove ${dups.length} duplicate import${dups.length>1?'s':''}`,d:'Each appears twice in Street but once on the bank statement. If one copy is reconciled, unreconcile the duplicate first, then delete it on the Bank Transactions tab.',b:dups.map(s=>`${fd(s.date)}  ${s.desc}  ${money(s.amt,{sign:true})} (${s.status||'no status'})`)});
   if(other.length)steps.push({t:`Investigate ${other.length} Street line${other.length>1?'s':''} not on the bank statement`,d:`Check with the client whether these belong to a different bank account, were added by mistake, or are on a later statement. Delete any that don't belong.${other.filter(s=>s.rec).length?` ${other.filter(s=>s.rec).length} of them are already reconciled, so unreconcile them first and check what they were reconciled to.`:''}`,b:other.slice(0,8).map(s=>`${fd(s.date)}  ${s.desc}  ${money(s.amt,{sign:true})}`).concat(other.length>8?[`...and ${other.length-8} more`]:[])});
-  const ready=r.unrecStmt.filter(s=>s.hint&&s.hint.k==='ok'),todo=r.unrecStmt.filter(s=>s.hint&&s.hint.k==='info');
-  if(ready.length||todo.length)steps.push({t:'Reconcile the outstanding statement lines',d:`On the Reconcile tab, ${ready.length?`${ready.length} line${ready.length>1?'s':''} already ${ready.length>1?'have':'has'} a matching Street entry, so try Bulk Reconcile Linked and Bulk Reconcile Suggested first. `:''}${todo.length?`${todo.length} line${todo.length>1?'s need':' needs'} receipting or allocating. Send anything you can't identify to the Suspense Account.`:''}`,b:todo.slice(0,8).map(s=>`${fd(s.date)}  ${s.desc}  ${money(s.amt,{sign:true})}`)});
+  const ready=r.unrecStmt.filter(s=>s.hint&&s.hint.k==='ok'&&s.hint.cat!=='bulk'),todo=r.unrecStmt.filter(s=>s.hint&&s.hint.k==='info'),inGrp=r.unrecStmt.filter(s=>s.hint&&s.hint.cat==='bulk');
+  if(ready.length||todo.length)steps.push({t:'Reconcile the outstanding statement lines',d:`On the Reconcile tab, ${ready.length?`${ready.length} line${ready.length>1?'s':''} already ${ready.length>1?'have':'has'} a matching Street entry, so try Bulk Reconcile Linked and Bulk Reconcile Suggested first. `:''}${todo.length?`${todo.length} line${todo.length>1?'s need':' needs'} receipting or allocating. Send anything you can't identify to the Suspense Account. `:''}${inGrp.length?`${inGrp.length} belong${inGrp.length===1?'s':''} to bulk or split groups, so reconcile those with their group rather than here.`:''}`,b:todo.slice(0,8).map(s=>`${fd(s.date)}  ${s.desc}  ${money(s.amt,{sign:true})}`)});
   const neverIn=r.unrecStreet.filter(a=>a.hint&&a.hint.cat==='neverIn'),neverOut=r.unrecStreet.filter(a=>a.hint&&a.hint.cat==='neverOut'),dupE=r.unrecStreet.filter(a=>a.hint&&a.hint.cat==='dupentry');
   const ln=a=>`${fd(a.date)}  ${[a.type,a.rel,a.desc].filter(Boolean).join(' · ')}  ${money(a.amt,{sign:true})}`;
   if(neverIn.length)steps.push({t:`Reverse ${neverIn.length} receipt${neverIn.length>1?'s':''} with no money in the bank`,d:`These total ${money(neverIn.reduce((x,a)=>x+a.amt,0))} and are recorded against ledgers, but the money never reached the client account. Confirm with the client, then reverse or cancel them so the ledgers show what's really held. If they were added to fix a ledger balance, find the real cause of that balance instead.`,b:lineList(neverIn,ln,10)});
@@ -1850,13 +1895,67 @@ function loadExample(){clearAll(true);const ex=buildExample();S.example=true;$('
   $('#cLedgerOpen').value='47,750.00';$('#sContact').value='Sarah';$('#cSuspenseOpen').value='0.00';
   loadText('bank',ex.bankCsv,'example-bank-statement.csv');loadText('sbt',ex.sbtCsv,'example-bank-transactions.csv');loadText('sat',ex.satCsv,'example-account-transactions.csv');
   if(R){$('#cRecStmt').value=(R.stmtCalc/100).toFixed(2);$('#cRecStreet').value=(R.expectedStreet/100).toFixed(2);analyse()}}
-function clearAll(keepQuiet){S.bank=S.sbt=S.sat=null;S.example=false;$('#exampleBanner').hidden=true;
+function clearAll(keepQuiet){S.bank=S.sbt=S.sat=null;S.example=false;$('#caseStatus').textContent='Nothing is saved until you download the workbook.';$('#exampleBanner').hidden=true;
   document.querySelectorAll('#step1 input').forEach(i=>i.value='');$('#cTol').value='3';$('#mDir').value='auto';$('#bankMapping').hidden=true;
   ['bank','sbt','sat'].forEach(s=>{const el={bank:'#stBank',sbt:'#stSbt',sat:'#stSat'}[s];$(el).innerHTML='<span class="chip info">No file yet</span>';const d={bank:'#dropBank',sbt:'#dropSbt',sat:'#dropSat'}[s];$(d).classList.remove('loaded','err')});
   SB_STATE.mode='sat';['#sNotes','#sContact'].forEach(id=>$(id).value='');sumDirty=false;R=null;renderEmpty();if(!keepQuiet)toast('Cleared. Ready for a new case.')}
 
 wireDrop('bank','#dropBank','#fileBank');wireDrop('sbt','#dropSbt','#fileSbt');wireDrop('sat','#dropSat','#fileSat');
 document.querySelectorAll('#step1 input,#step1 select,#mDir').forEach(el=>el.addEventListener('change',analyse));
+/* ---------- workbook: save to an .xlsx on the user's computer and reopen it later ---------- */
+const XLSX_URL='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';let xlsxReady=null;
+function ensureXlsx(){if(window.XLSX)return Promise.resolve(window.XLSX);if(!xlsxReady)xlsxReady=loadScript(XLSX_URL).then(()=>window.XLSX).catch(e=>{xlsxReady=null;throw e});return xlsxReady}
+const CASE_FIELDS=[['cClient','Client'],['cAccount','Bank account'],['cGoLive','Go-live date (yyyy-mm-dd)'],['cUpTo','Check up to (yyyy-mm-dd)'],['cStmtOpen','Opening balance in Street'],['cBankOpen','Bank balance at go-live'],['cLedgerOpen','Ledger opening balances'],['cSuspenseOpen','Suspense opening balance'],['cRecStmt','Statement Balance (Reconcile tab)'],['cRecStreet','Street Balance (Reconcile tab)'],['cBankClose','Physical bank balance'],['cTol','Match dates within (days)'],['mDir','Account transactions money in is (auto, debitIn, creditIn)'],['sMe','Your name'],['sContact','Client contact first name'],['sStage','Where the case is up to (first, progress, recheck, closed)'],['sNotes','Your notes']];
+const numish=v=>typeof v==='string'&&/^-?\d+(\.\d+)?$/.test(v)?Number(v):v;
+function workbookName(){const c=$('#cClient').value.trim()||'Client';return `${c.replace(/[\\\/:*?"<>|]+/g,' ').trim()} Client Account Reconciliation.xlsx`}
+async function exportWorkbook(){if(!R){toast('Add the files first.');return}let X;try{X=await ensureXlsx()}catch(e){toast('The spreadsheet tool could not load. Check your internet connection and try again.');return}
+  const r=R,wb=X.utils.book_new(),add=(name,aoa,widths)=>{const ws=X.utils.aoa_to_sheet(aoa);if(widths)ws['!cols']=widths.map(w=>({wch:w}));X.utils.book_append_sheet(wb,ws,name.slice(0,31))};
+  const stmt=r.recStmt!=null?r.recStmt:r.stmtCalc,street=r.recStreet!=null?r.recStreet:r.expectedStreet,p=v=>v==null?'':v/100;
+  add('Summary',[['Client Account Reconciliation'],[],['Client',$('#cClient').value],['Bank account',$('#cAccount').value],['Period checked',`${fd(r.goLive)} to ${fd(r.upTo)}`],['Saved',new Date().toLocaleString('en-GB')],[],
+    ['The goal','Statement Balance and Street Balance both match the bank, and everything is reconciled'],['Physical bank balance',p(r.bankClose)],['Statement Balance',p(stmt)],['Statement Balance less bank',stmt!=null&&r.bankClose!=null?p(stmt-r.bankClose):''],['Street Balance',p(street)],['Street Balance less bank',street!=null&&r.bankClose!=null?p(street-r.bankClose):''],['Unreconciled statement lines',r.unrecStmt.length],['Unreconciled Street entries',r.SA?r.unrecStreet.length:''],[],
+    ['Bridge: bank to Statement Balance'],['Physical bank balance',p(r.bankClose)],['Less lines missing from Street',p(-r.missingNet)],['Add Street lines not on bank',p(r.extraNet)],['Add amount differences',p(r.diffNet)],['Add opening balance difference',p(r.openDiff)],['Expected Statement Balance',p(r.expectedStmt)],['Statement Balance (export)',p(r.stmtCalc)],['Unexplained',p(r.stmtUnexplained)],[],
+    ['Bridge: Statement to Street Balance'],['Statement Balance',p(stmt)],['Less unreconciled statement lines',p(-r.unrecStmtNet)],['Add unreconciled Street entries',r.SA?p(r.unrecStreetNet):''],['Expected Street Balance',p(r.expectedStreet)],['Street Balance (Reconcile tab)',p(r.recStreet)],['Unexplained',p(r.streetVar)]],[42,60]);
+  let sec='';const ch=[['Section','Status','Check','Detail','Amount']];(r.checks||[]).forEach(c=>{if(c.head){sec=c.head;return}ch.push([sec,{ok:'OK',warn:'Check',bad:'Issue',info:'Info'}[c.s],txt(c.t),txt(c.d),c.a||''])});add('Health checks',ch,[34,8,50,90,14]);
+  add('Plan',[['Step','What to do','Detail']].concat(planSteps.flatMap((s,i)=>[[i+1,s.t,s.d]].concat(s.b.map(x=>['','',x])))),[6,50,100]);
+  const tab=(name,key,mode)=>{const d=tableData(key,mode);add(name,[d.head].concat(d.rows.map(row=>row.map(c=>c.n?numish(c.v):c.v))),d.head.map(()=>22))};
+  const modes=r.cmp.sat?[['sat','Acct'],['sbt','Bank tx']]:[['sbt','Bank tx']];
+  modes.forEach(([m,lbl])=>{const sd=sideData(r,m,SB_STATE.open);add(`Side by side (${lbl})`,sideTable(true,sd,sd.rows).map((row,i)=>i?row.map(numish):row),[11,40,12,12,14,22,11,40,12,12,14,16,12]);
+    tab(`Missing (${lbl})`,'missing',m);tab(`Not on bank (${lbl})`,'extra',m);tab(`Different amounts (${lbl})`,'diffs',m);tab(`Bulk and split (${lbl})`,'groups',m)});
+  tab('Unreconciled statement lines','unstmt');if(r.SA){tab('No money in the bank','nobank');tab('Unreconciled Street entries','unstreet')}
+  add('Internal note',$('#sumNote').value.split('\n').map(l=>[l]),[140]);add('Customer message',$('#sumMsg').value.split('\n').map(l=>[l]),[120]);
+  /* data used to reopen the workbook */
+  const set=[['Setting','Value','Key'],['Workbook version','1','_v']].concat(CASE_FIELDS.map(([id,label])=>[label,($('#'+id)||{}).value||'',id]));
+  set.push(['Compare with (sat or sbt)',SB_STATE.mode,'_mode'],['Starting balance (align or street)',SB_STATE.open,'_open']);
+  if(S.bank){set.push(['Bank statement file',S.bank.name,'_bankName'],['Bank statement source',S.bank.source,'_bankSource'],['Bank column choices',JSON.stringify(S.bank.map),'_bankMap'])}
+  if(S.sbt)set.push(['Street bank transactions file',S.sbt.name,'_sbtName']);if(S.sat)set.push(['Street account transactions file',S.sat.name,'_satName']);
+  set.push(['Edited note and message kept',sumDirty?'yes':'no','_edited']);
+  add('Settings',set,[48,40,16]);
+  if(S.bank)add('Data - Bank statement',[S.bank.headers].concat(S.bank.rows));
+  if(S.sbt)add('Data - Street bank tx',[S.sbt.headers].concat(S.sbt.rows));
+  if(S.sat)add('Data - Street account tx',[S.sat.headers].concat(S.sat.rows));
+  const buf=X.write(wb,{type:'array',bookType:'xlsx',compression:true});const name=workbookName();
+  await saveFile(name,new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));$('#caseStatus').textContent=`Downloaded "${name}" at ${new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}.`}
+async function importWorkbook(file){let X;try{X=await ensureXlsx()}catch(e){toast('The spreadsheet tool could not load. Check your internet connection and try again.');return}
+  let wb;try{wb=X.read(await file.arrayBuffer(),{type:'array'})}catch(e){toast('Could not open that file.');return}
+  const sheet=n=>wb.Sheets[n]?X.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:false,defval:''}):null;
+  const set=sheet('Settings');if(!set||!wb.Sheets['Data - Bank statement']&&!wb.Sheets['Data - Street bank tx']){toast('That isn\'t a workbook saved from this tool.');return}
+  const val={};set.slice(1).forEach(row=>{if(row[2])val[row[2]]=row[1]});
+  const toCsv=rows=>rows.map(r=>r.map(c=>csvCell(c)).join(',')).join('\n');
+  clearAll(true);S.restoring=true;
+  CASE_FIELDS.forEach(([id])=>{const el=document.getElementById(id);if(el&&val[id]!=null)el.value=val[id]});
+  SB_STATE.mode=val._mode==='sbt'?'sbt':'sat';SB_STATE.open=val._open==='street'?'street':'align';$('#sbOpen').value=SB_STATE.open;
+  try{const sb=sheet('Data - Street bank tx'),sa=sheet('Data - Street account tx'),bk=sheet('Data - Bank statement');
+    if(sb)loadText('sbt',toCsv(sb),val._sbtName||'Street bank transactions');if(sa)loadText('sat',toCsv(sa),val._satName||'Street account transactions');
+    if(bk){let map=null;try{map=JSON.parse(val._bankMap||'null')}catch(e){}
+      if(val._bankSource==='pdf')loadGrid({headers:bk[0],rows:bk.slice(1),map},val._bankName||'Bank statement');
+      else{loadText('bank',toCsv(bk),val._bankName||'Bank statement');if(S.bank&&map){S.bank.map=map;buildMappingUI()}}}}
+  finally{S.restoring=false}
+  analyse();
+  if(val._edited==='yes'&&R){const ln=n=>(sheet(n)||[]).map(r=>r[0]||'').join('\n');$('#sumNote').value=ln('Internal note');$('#sumMsg').value=ln('Customer message');sumDirty=true}
+  $('#caseStatus').textContent=`Opened "${file.name}". Download the workbook again to save any changes.`;toast(`Opened ${val.cClient||file.name}`)}
+$('#btnSaveCase').addEventListener('click',exportWorkbook);$('#btnExportCase').addEventListener('click',exportWorkbook);
+$('#btnImportCase').addEventListener('click',()=>$('#fileCase').click());
+$('#fileCase').addEventListener('change',()=>{const f=$('#fileCase').files[0];$('#fileCase').value='';if(f)importWorkbook(f)});
 $('#btnExample').addEventListener('click',loadExample);$('#btnClear').addEventListener('click',()=>clearAll());$('#btnClear2').addEventListener('click',()=>clearAll());
 $('#btnCopyPlan').addEventListener('click',()=>{if(!planText){toast('Add the files first to build a plan');return}copyText(planText,'Plan copied')});
 /* ---------- case summary ---------- */
@@ -1872,6 +1971,9 @@ function buildNote(r){const L=[];const client=$('#cClient').value.trim(),acct=$(
   L.push(`Checked on: ${todayStr()}${me?' by '+me:''}`);L.push(`Status: ${STAGE[$('#sStage').value]}`);
   L.push(`Files used: ${[S.bank&&S.bank.name,S.sbt&&S.sbt.name,S.sat&&S.sat.name].filter(Boolean).join(', ')}`);
   if(S.example)L.push('NOTE: this was built from the example case, not real client data.');
+  {const stmt=r.recStmt!=null?r.recStmt:r.stmtCalc,street=r.recStreet!=null?r.recStreet:r.expectedStreet;L.push('','GOAL: Statement Balance and Street Balance both match the bank, and everything is reconciled');
+    L.push(`  Bank ${money(r.bankClose)} | Statement ${money(stmt)} (${stmt!=null&&r.bankClose!=null?money(stmt-r.bankClose,{sign:true})+' out':'n/a'}) | Street ${money(street)} (${street!=null&&r.bankClose!=null?money(street-r.bankClose,{sign:true})+' out':'n/a'})`);
+    L.push(`  Still to reconcile: ${r.unrecStmt.length} statement lines${r.SA?`, ${r.unrecStreet.length} Street entries`:''}`)}
   L.push('','HOW LINES WERE MATCHED');HOW_RULES(r).forEach((x,i)=>L.push(`${i+1}. ${x}`));
   L.push('Where it can go wrong:');HOW_RISKS.forEach(x=>L.push('  - '+x));
   L.push('','BALANCES');
@@ -1916,7 +2018,7 @@ function buildNote(r){const L=[];const client=$('#cClient').value.trim(),acct=$(
   L.push('','PLAN');planSteps.forEach((s,i)=>{L.push(`${i+1}. ${s.t}`);L.push(`   ${s.d}`)});
   if(notes){L.push('','NOTES');L.push(notes)}
   return L.join('\n')}
-function buildMessage(r){const name=$('#sContact').value.trim(),me=$('#sMe').value.trim(),stage=$('#sStage').value;const L=[];
+function buildMessage(r){const name=$('#sContact').value.trim(),me=$('#sMe').value.trim(),stage=$('#sStage').value;const L=[];const cD=r.diffs.concat(r.cmp.sat?r.cmp.sat.diffs:[]).filter(p=>!r.claimed.has(p.b.id)&&!r.claimed.has(p.s.id));
   L.push(`Hi ${name||'there'},`,'');
   const per=`${fd(r.goLive)} to ${fd(r.upTo)}`;
   const found=[],need=[];
@@ -1930,7 +2032,7 @@ function buildMessage(r){const name=$('#sContact').value.trim(),me=$('#sMe').val
   if(nearM.length)found.push(`${nearM.length} transaction${nearM.length>1?'s':''} on your bank statement ${nearM.length>1?'look':'looks'} like ${nearM.length>1?'they':'it'} may be in Street under a different date, so ${nearM.length>1?'they need':'it needs'} checking before anything is imported.`);
   const dups=r.extra.filter(s=>s.dupOf),other=r.extra.filter(s=>!s.dupOf);
   if(dups.length)found.push(`${dups.length} transaction${dups.length>1?'s have':' has'} been imported into Street twice.`);
-  if(r.diffs.length)found.push(`${r.diffs.length} transaction${r.diffs.length>1?'s are':' is'} in Street with a slightly different amount to your bank statement${r.diffs.some(p=>p.kind==='pennies')?', some only by pennies':''}. These need the difference recording or the amount correcting before they can be reconciled.`);
+  if(cD.length)found.push(`${cD.length} transaction${cD.length>1?'s are':' is'} in Street with a slightly different amount to your bank statement${cD.some(p=>p.kind==='pennies')?', some only by pennies':''}. These need the difference recording or the amount correcting before they can be reconciled.`);
   if(r.allGroups.length)found.push(`${r.allGroups.length} bank line${r.allGroups.length>1?'s are':' is'} bulk or split payment${r.allGroups.length>1?'s':''} that match several lines in Street when added together (for example rent with commission taken off). These just need reconciling together.`);
   if(other.length){found.push(`${other.length} transaction${other.length>1?'s':''} in Street ${other.length>1?'don\'t':'doesn\'t'} appear on your bank statement.`);need.push(`Can you let me know whether the transaction${other.length>1?'s':''} listed under "To check" below belong${other.length>1?'':'s'} to this account?`)}
   if(r.unrecStmt.length)found.push(`${r.unrecStmt.length} bank line${r.unrecStmt.length>1?'s':''} in Street ${r.unrecStmt.length>1?'still need':'still needs'} to be receipted or matched.`);
@@ -1946,9 +2048,9 @@ function buildMessage(r){const name=$('#sContact').value.trim(),me=$('#sMe').val
     L.push(`To match them up, I paired each bank line with a line in Street that has the same amount, goes the same way (money in or money out) and is dated within ${plural2(r.tol,'day')} of it.`,'');
     L.push('What I found:');found.forEach(f=>L.push('- '+f));L.push('');
     if(sureM.length){L.push('To import into Street:');lineList(sureM,l=>`- ${fd(l.date)}  ${l.desc}  ${money(Math.abs(l.amt))} ${l.amt>0?'in':'out'}`,15).forEach(x=>L.push(x.startsWith('-')?x:'- '+x));L.push('')}
-    if(r.diffs.length||dups.length||other.length||nearM.length){L.push('To check:');
+    if(cD.length||dups.length||other.length||nearM.length){L.push('To check:');
       lineList(nearM,l=>`- ${fd(l.date)}  ${l.desc}  ${money(Math.abs(l.amt))}: on the bank statement, possibly in Street ${l.near?'on '+fd(l.near.date):'under a different date'}`,10).forEach(x=>L.push(x.startsWith('-')?x:'- '+x));
-      r.diffs.forEach(p=>L.push(`- ${fd(p.b.date)}  ${p.b.desc}: ${money(Math.abs(p.b.amt))} on the bank statement, but ${money(Math.abs(p.s.amt))} in Street${p.kind==='pennies'?` (out by ${money(Math.abs(p.s.amt-p.b.amt))}: a ${money(Math.abs(p.s.amt-p.b.amt))} ${(p.s.amt-p.b.amt)>0?'payment or transfer out':'receipt or transfer in'} is needed so the two can be reconciled)`:p.kind==='transposed'?' (two digits look swapped)':''}`));
+      cD.forEach(p=>L.push(`- ${fd(p.b.date)}  ${p.b.desc}: ${money(Math.abs(p.b.amt))} on the bank statement, but ${money(Math.abs(p.s.amt))} in Street${p.kind==='pennies'?` (out by ${money(Math.abs(p.s.amt-p.b.amt))}: a ${money(Math.abs(p.s.amt-p.b.amt))} ${(p.s.amt-p.b.amt)>0?'payment or transfer out':'receipt or transfer in'} is needed so the two can be reconciled)`:p.kind==='transposed'?' (two digits look swapped)':''}`));
       dups.forEach(s=>L.push(`- ${fd(s.date)}  ${s.desc}  ${money(Math.abs(s.amt))}: imported twice`));
       lineList(other,s=>`- ${fd(s.date)}  ${s.desc}  ${money(Math.abs(s.amt))}: in Street but not on the bank statement`,10).forEach(x=>L.push(x.startsWith('-')?x:'- '+x));L.push('')}
     if(nIn.length){L.push('Receipts in Street with no money in the bank:');lineList(nIn,a=>`- ${fd(a.date)}  ${[a.rel,a.desc].filter(Boolean).join(' · ')}  ${money(Math.abs(a.amt))}`,15).forEach(x=>L.push(x.startsWith('-')?x:'- '+x));L.push('')}
